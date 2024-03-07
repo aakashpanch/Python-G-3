@@ -121,7 +121,64 @@ def create_node():
 
     st.json(st.session_state["node_list"],expanded=False)
 
+def update_node():
+    node_list = st.session_state["node_list"]
+    node_names = [node["name"] for node in node_list]
 
+    try:
+        # Select the node to update
+        node_to_update = st.selectbox("Select node to update", options=node_names)
+
+        # Find the index of the selected node in the list
+        selected_index = node_names.index(node_to_update)
+        selected_node = node_list[selected_index]
+
+        # Display current node properties
+        st.write(f"Current properties of node '{node_to_update}':")
+        st.write(selected_node)
+
+        # Allow users to update node properties
+        custom_node_name = st.text_input("Enter new name for the node", value=selected_node["name"])
+        new_type = st.selectbox("Select new type for the node", options=["Product 1", "Product 2", "Process", "Resource"])
+        update_node_button = st.button("Update Node", key="update_node_button", use_container_width=True, type="primary")
+
+        if update_node_button:
+            # Update node properties
+            node_list[selected_index]["name"] = custom_node_name
+            node_list[selected_index]["type"] = new_type
+
+            # Update session state with the modified node list
+            st.session_state["node_list"] = node_list
+
+            st.success(f"Node '{node_to_update}' has been updated.")
+
+    except ValueError:
+        st.error("There are no nodes added yet. Please create nodes or import a graph")
+
+# Function to delete a node
+def delete_node():
+    import time
+    node_list = st.session_state["node_list"]
+    node_names = [node["name"] for node in node_list]
+
+    node_to_delete = st.selectbox("Select node to delete", options=node_names)
+    delete_node_button = st.button("Delete Node", key="delete_node_button", use_container_width=True, type="primary")
+
+    if delete_node_button:
+        # Remove the node from the node list
+        st.session_state["node_list"] = [node for node in node_list if node["name"] != node_to_delete]
+
+        # Remove edges connected to the deleted node from the edge list
+        st.session_state["p1_list"] = [edge for edge in st.session_state["p1_list"]
+                                         if edge["source"] != node_to_delete and edge["target"] != node_to_delete]
+
+        st.session_state["p2_list"] = [edge for edge in st.session_state["p2_list"]
+                                       if edge["source"] != node_to_delete and edge["target"] != node_to_delete]
+        st.session_state["deleted_node"] = node_to_delete  # Store the deleted node name
+
+        st.success(f"Node '{node_to_delete}' has been deleted.")
+        time.sleep(1)
+        st.experimental_rerun()
 def create_relation():
     with st.expander("Product 1"):
         product_name = ["Product 2"]
