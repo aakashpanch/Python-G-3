@@ -123,6 +123,8 @@ def create_node():
 
 def update_node():
     node_list = st.session_state["node_list"]
+    edge1_list = st.session_state["p1_list"]
+    edge2_list = st.session_state["p2_list"]
     node_names = [node["name"] for node in node_list]
 
     try:
@@ -140,22 +142,43 @@ def update_node():
         # Allow users to update node properties
         custom_node_name = st.text_input("Enter new name for the node", value=selected_node["name"])
         new_type = st.selectbox("Select new type for the node", options=["Product 1", "Product 2", "Process", "Resource"])
-        update_node_button = st.button("Update Node", key="update_node_button", use_container_width=True, type="primary")
+
+        # Generate a dynamic key based on the selected node
+        update_node_button_key = f"update_node_button_{node_to_update}"
+        update_node_button = st.button("Update Node", key=update_node_button_key, use_container_width=True, type="primary")
 
         if update_node_button:
             # Update node properties
             node_list[selected_index]["name"] = custom_node_name
             node_list[selected_index]["type"] = new_type
 
-            # Update session state with the modified node list
-            st.session_state["node_list"] = node_list
+            # Update edges connected to the selected node
+            updated_edges1 = []
+            for edge in edge1_list:
+                if edge["source"] == node_to_update:
+                    edge["source"] = custom_node_name
+                if edge["target"] == node_to_update:
+                    edge["target"] = custom_node_name
+                updated_edges1.append(edge)
 
-            st.success(f"Node '{node_to_update}' has been updated.")
+            updated_edges2 = []
+            for edge in edge2_list:
+                if edge["source"] == node_to_update:
+                    edge["source"] = custom_node_name
+                if edge["target"] == node_to_update:
+                    edge["target"] = custom_node_name
+                updated_edges2.append(edge)
+
+# Update session state with the modified node and edge lists
+            st.session_state["node_list"] = node_list
+            st.session_state["p1_list"] = updated_edges1
+            st.session_state["p2_list"] = updated_edges2
+
+            st.success(f"Node '{node_to_update}' and connected edges have been updated.")
 
     except ValueError:
         st.error("There are no nodes added yet. Please create nodes or import a graph")
 
-# Function to delete a node
 def delete_node():
     import time
     node_list = st.session_state["node_list"]
