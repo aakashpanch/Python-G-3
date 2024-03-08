@@ -22,6 +22,7 @@ if __name__ == '__main__':
     if "graph_dict" not in st.session_state:
         st.session_state["graph_dict"] = []
     st.session_state["selected_value"] = ""
+    st.session_state["selected_value11"] = ""
 
     tab_list = [
             "import existing graph",
