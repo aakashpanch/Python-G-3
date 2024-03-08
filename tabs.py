@@ -179,6 +179,7 @@ def delete_node():
         st.success(f"Node '{node_to_delete}' has been deleted.")
         time.sleep(1)
         st.experimental_rerun()
+
 def create_relation():
     with st.expander("Product 1"):
         product_name = ["Product 2"]
@@ -306,6 +307,24 @@ def create_relation():
         st.write(f"{node1_select} is {relation2_name}  {node2_select}")
 
         st.json(st.session_state["p2_list"], expanded=False)
+
+def delete_relation():
+    # Assuming you have an "edges_list" representing relations between nodes
+    p1_list = st.session_state["p1_list"]
+    p2_list = st.session_state["p2_list"]
+
+    node_list = st.session_state["node_list"]
+    node_names = [node["name"] for node in node_list]
+    relation_to_delete = st.selectbox("Select relation to delete", options=node_names)
+    delete_relation_button = st.button("Delete Relation", key="delete_node_button", use_container_width=True, type="primary")
+
+    # Remove edges connected to the deleted node
+    if delete_relation_button:
+        st.session_state["p1_list"] = [edge for edge in p1_list
+                                          if edge["source"] != relation_to_delete and edge["target"] != relation_to_delete]
+
+        st.session_state["p2_list"] = [edge for edge in p2_list
+                                          if edge["source"] != relation_to_delete and edge["target"] != relation_to_delete]
 
 def store_graph():
     with st.expander("show individual lists"):
