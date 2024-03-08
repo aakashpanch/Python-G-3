@@ -3,7 +3,7 @@ import streamlit as st
 
 from streamlit_option_menu import option_menu
 
-from tabs import (upload_graph, create_node, create_relation, store_graph, visualization_graph, analyze_graph,
+from tabs import (upload_graph, create_node, update_node, delete_node, create_relation, delete_relation, store_graph, visualization_graph, analyze_graph,
                   export_graph)
 
 if __name__ == '__main__':
@@ -24,7 +24,10 @@ if __name__ == '__main__':
     tab_list = [
             "import existing graph",
             "Create Nodes (Nodes)",
+            "Update Nodes",
+            "Delete Nodes",
             "Create Relation",
+            "Delete Relation",
             "Store the graph",
             "Visualize the graph",
             "Analyze the graph",
@@ -59,9 +62,18 @@ if __name__ == '__main__':
     if selected_tab == "Create Nodes (Nodes)":
         create_node()
 
+    if selected_tab == "Update Nodes":
+        update_node()
+
+    if selected_tab == "Delete Nodes":
+        delete_node()
+
     if selected_tab ==  "Create Relation":
         create_relation()
 
+    if selected_tab == "Delete Relation":
+        delete_relation()
+  
     if selected_tab == "Store the graph":
         store_graph()
 
