@@ -1,6 +1,8 @@
 import streamlit as st
 import networkx as nx
 import graphviz
+from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
+from networkx.algorithms import approximation as approx
 def output_nodes_and_edges(graph:nx.Graph):
     st.write(graph.nodes)
     st.write(graph.edges)
@@ -255,3 +257,49 @@ def product2_visual():
         relation = edge["type"]
         graph.edge(source, target, relation)
     st.graphviz_chart(graph)
+
+def resource_utilization(graph):
+
+    graph_dict = st.session_state["graph_dict"]
+    node_list = graph_dict["nodes"]
+    edge1_list = graph_dict["product 1"]
+    edge2_list = graph_dict["product 2"]
+
+
+
+    node_list = st.session_state["node_list"]
+    node_name_list = []
+
+    for node in node_list:
+        if node["type"] == "Resource":
+            #st.session_state(node_name_list) = node["name"]
+            node_name_list.append(node["name"])
+
+    r = len(node_name_list)
+    st.write(f" Number of Resources in the system {r}")
+    #st.json(node_name_list, expanded=False)
+
+    edge_resource_list = []
+    #st.json(edge1_list, expanded=False)
+
+    name_list = []
+    c = 0
+
+    for name in node_name_list:
+        for edge in edge1_list:
+            if name not in name_list and (name == edge["source"] or name == edge["target"]):
+                name_list.append(name)
+                c = c + 1
+    #for edge in edge1_list:
+        #if edge["source"] in node_name_list or edge["target"] in node_name_list:
+           # edge_resource_list.append(edge)
+    st.write(f" Number of Resources utilised in the system {c}")
+
+    x = (c / r) * 100
+
+    st.write(f"Resource Utilisation is {x} percentage")
+
+
+
+    #x = graph.count_disconnected_components(graph)
+    #st.write(x)

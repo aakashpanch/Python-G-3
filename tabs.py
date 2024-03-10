@@ -7,7 +7,8 @@ from streamlit_agraph import agraph, Node, Edge, Config
 import networkx as nx
 from graph_functions import (output_nodes_and_edges, count_nodes, count_edges, density_graph,
                              check_path, is_empty, is_directed, shortest_path, specific_node,
-                             specific_edge, product1_visual, product2_visual)
+                             specific_edge, product1_visual, product2_visual, resource_utilization)
+from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
 
 
 
@@ -179,6 +180,7 @@ def update_node():
     except ValueError:
         st.error("There are no nodes added yet. Please create nodes or import a graph")
 
+# Function to delete a node
 def delete_node():
     import time
     node_list = st.session_state["node_list"]
@@ -303,6 +305,7 @@ def create_relation():
             callback2()
             st.write("Type")
             st.info(st.session_state["selected_value11"])
+
         with relation_col:
             # Logic
             relation_list = metamodel_dict["edges"]
@@ -331,33 +334,6 @@ def create_relation():
 
         st.json(st.session_state["p2_list"], expanded=False)
 
-def delete_relation():
-    # Assuming you have an "edges_list" representing relations between nodes
-    p1_list = st.session_state["p1_list"]
-
-    node_list = st.session_state["node_list"]
-    node_names = [node["name"] for node in node_list]
-    relation_for_P1_to_delete = st.selectbox("Select relation for P1 to delete", options=node_names)
-    delete_relation_for_P1_button = st.button("Delete Relation", key="delete_relation_for_P1_button", use_container_width=True, type="primary")
-
-    # Remove edges connected to the deleted node
-    if delete_relation_for_P1_button:
-        st.session_state["p1_list"] = [edge for edge in p1_list
-                                            if edge["source"] != relation_for_P1_to_delete and edge["target"] != relation_for_P1_to_delete]
-
-    # Assuming you have an "edges_list" representing relations between nodes
-    p2_list = st.session_state["p2_list"]
-
-    node_list = st.session_state["node_list"]
-    node_names = [node["name"] for node in node_list]
-    relation_for_P2_to_delete = st.selectbox("Select relation for P2 to delete", options=node_names)
-    delete_relation_for_P2_button = st.button("Delete Relation", key="delete_relation_for_P2_button", use_container_width=True, type="primary")
-
-    # Remove edges connected to the deleted node
-    if delete_relation_for_P2_button:
-        st.session_state["p2_list"] = [edge for edge in p2_list
-                                            if edge["source"] != relation_for_P2_to_delete and edge["target"] != relation_for_P2_to_delete]
-      
 def store_graph():
     with st.expander("show individual lists"):
         st.json(st.session_state["node_list"], expanded=False)
@@ -372,6 +348,42 @@ def store_graph():
     st.session_state["graph_dict"] = graph_dict
     with st.expander("Show graph JSON"):
         st.json(st.session_state["graph_dict"])
+
+def delete_relation():
+    # Assuming you have an "edges_list" representing relations between nodes
+    p1_list = st.session_state["p1_list"]
+
+    node_list = st.session_state["node_list"]
+    node_names = [node["name"] for node in node_list]
+    relation_for_P1_to_delete = st.selectbox("Select relation for P1 to delete",
+                                             options=node_names)
+    delete_relation_for_P1_button = st.button("Delete Relation",
+                                              key="delete_relation_for_P1_button",
+                                              use_container_width=True,
+                                              type="primary")
+
+    # Remove edges connected to the deleted node
+    if delete_relation_for_P1_button:
+        st.session_state["p1_list"] = [edge for edge in p1_list
+                                            if edge["source"] != relation_for_P1_to_delete and
+                                       edge["target"] != relation_for_P1_to_delete]
+
+    # Assuming you have an "edges_list" representing relations between nodes
+    p2_list = st.session_state["p2_list"]
+
+    node_list = st.session_state["node_list"]
+    node_names = [node["name"] for node in node_list]
+    relation_for_P2_to_delete = st.selectbox("Select relation for P2 to delete", options=node_names)
+    delete_relation_for_P2_button = st.button("Delete Relation",
+                                              key="delete_relation_for_P2_button",
+                                              use_container_width=True,
+                                              type="primary")
+
+    # Remove edges connected to the deleted node
+    if delete_relation_for_P2_button:
+        st.session_state["p2_list"] = [edge for edge in p2_list
+                                            if edge["source"] != relation_for_P2_to_delete and
+                                       edge["target"] != relation_for_P2_to_delete]
 
 def visualization_graph():
 
@@ -667,6 +679,7 @@ def analyze_graph():
 
         select_functions1 = st.selectbox(label="Select Function",
                                         options=["Output Nodes and Edges",
+                                                 "Resource Utilization",
                                                  "Count Nodes",
                                                  "Count Edges",
                                                  "Specific Node",
@@ -682,6 +695,8 @@ def analyze_graph():
             output_nodes_and_edges(graph=G)
         elif select_functions1 == "Count Nodes":
             count_nodes(G)
+        elif select_functions1 == "Resource Utilization":
+            resource_utilization(G)
         elif select_functions1 == "Count Edges":
             count_edges(G)
         elif select_functions1 == "Specific Node":
