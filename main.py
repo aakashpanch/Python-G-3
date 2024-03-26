@@ -25,8 +25,8 @@ if __name__ == '__main__':
     st.session_state["selected_value11"] = ""
 
     tab_list = [
-            "import existing graph",
-            "Create Nodes (Nodes)",
+            "Import existing graph",
+            "Create Nodes",
             "Update Nodes",
             "Delete Nodes",
             "Create Relation",
@@ -41,9 +41,9 @@ if __name__ == '__main__':
     with st.sidebar:
         selected_tab = option_menu("Main Menu",
                                    tab_list,
-                                   icons=['house', 'gear', 'arrow-clockwise', 'apple', 'asterisk', 'balloon',
-                                          'boombox'],
-                                   menu_icon="cast",
+                                   icons=['upload', 'node-plus-fill', 'arrow-repeat', 'trash', 'diagram-3-fill', 'trash3-fill',
+                                          'floppy2', 'graph-up', 'bezier2', 'download'],
+                                   menu_icon="",
                                    default_index=0,
                                    orientation="vertical"
                                    )
@@ -55,9 +55,8 @@ if __name__ == '__main__':
                           #     default_index=1,
                           #     orientation= "horizontal"
                            #    )
-    st.write(selected_tab)
-
-    st.title("PyINPSE Tutorial 1")
+    
+    st.title("PPR-Machine Tower")
 
     if selected_tab == "import existing graph":
        upload_graph()
@@ -65,8 +64,6 @@ if __name__ == '__main__':
     if selected_tab == "Create Nodes (Nodes)":
         create_node()
     
- 
-
     if selected_tab == "Update Nodes":
         update_node()
 
