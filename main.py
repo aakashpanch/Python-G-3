@@ -58,10 +58,10 @@ if __name__ == '__main__':
     
     st.title("PPR-Machine Tower")
 
-    if selected_tab == "import existing graph":
+    if selected_tab == "Import existing graph":
        upload_graph()
 
-    if selected_tab == "Create Nodes (Nodes)":
+    if selected_tab == "Create Nodes":
         create_node()
     
     if selected_tab == "Update Nodes":
