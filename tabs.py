@@ -43,10 +43,6 @@ def upload_graph():
         #st.json(uploaded_graph_dict, expanded=False)
 
 def create_node():
-    def print_hi(name, age):
-        # Use a breakpoint in the code line below to debug your script.
-        st.info(f'Hi, My name is {name} and I am {age} years old')  # Press Ctrl+F8 to toggle the breakpoint.
-
     def save_engineering(cost, target_values, mttf, oee, mttr ):
         engineering_dict = {
                 "Cost": cost,
@@ -89,33 +85,39 @@ def create_node():
     name_node = st.text_input("Type in the name of the node")
     type_node = st.selectbox("Specify the type of the node", ["Product 1","Product 2", "Process", "Resource"])
 
-    engineering_node = st.selectbox('Specify the type of the attribute', ["Engineering Data"])
-    if engineering_node == "Engineering Data":
-        cost = st.text_input("COST")
-        target_values = st.text_input("Target Value")
-        mttf_data = st.text_input("MTTF")
-        oee_data = st.text_input("OEE DATA (percentage)")
-        mttr_data = st.text_input("MTTR DATA (minutes)")
+    st.write("Specify the type of the attribute")
+    tab1, tab2, tab3 = st.tabs(["Engineering Data", "Electrical Data", "Sustainabilty Data"])
 
-        engineering_data = save_engineering(cost, target_values, mttf_data, oee_data, mttr_data)
+    with tab1:
+        engineering_node_col = "Engineering Data"
+        if engineering_node_col == "Engineering Data":
+            cost = st.text_input("Cost")
+            target_values = st.text_input("Target Value")
+            mttf_data = st.text_input("MTTF")
+            oee_data = st.text_input("OEE DATA (percentage)")
+            mttr_data = st.text_input("MTTR DATA (minutes)")
 
-    electrical_node = st.selectbox('Specify the type of the attribute', ["Electrical Data"])
-    if electrical_node == "Electrical Data":
-        current = st.text_input("current (amp)")
-        voltage = st.text_input("voltage (volts)")
-        power = st.text_input("power (watt)")
-        resistance = st.text_input("resistance (ohms)")
-        electrical_data = save_electrical(current, voltage, power, resistance)
+            engineering_data = save_engineering(cost, target_values, mttf_data, oee_data, mttr_data)
 
-    sustainable_node = st.selectbox('Specify the type of the attribute', ["Sustainability Data"])
-    if sustainable_node == "Sustainability Data":
-        CO2_footprint = st.text_input("CO2 footprint (kilotons)")
-        energy_consumption = st.text_input("energy consumption (kWh)")
-        reusability = st.text_input("reusability (percentage)")
-        repairability = st.text_input("repairability (percentage)")
-        sustainable_data = save_sustainable(CO2_footprint, energy_consumption, reusability, repairability)
+    with tab2:
+        electrical_node_col = ("Electrical Data")
+        if electrical_node_col == "Electrical Data":
+            current = st.text_input("Current (amp)")
+            voltage = st.text_input("Voltage (volts)")
+            power = st.text_input("Power (watt)")
+            resistance = st.text_input("Resistance (ohms)")
+            electrical_data = save_electrical(current, voltage, power, resistance)
 
-    print_hi(name_node, engineering_node)
+    with tab3:
+        sustainable_node_col = ("Sustainability Data")
+        if sustainable_node_col == "Sustainability Data":
+            CO2_footprint = st.text_input("CO2 footprint (kilotons)")
+            energy_consumption = st.text_input("Energy consumption (kWh)")
+            reusability = st.text_input("Reusability (percentage)")
+            repairability = st.text_input("Repairability (percentage)")
+            sustainable_data = save_sustainable(CO2_footprint, energy_consumption, reusability, repairability)
+
+    #print_hi(name_node, engineering_node)
     save_node_button = st.button("Store Node", use_container_width=True, type="primary")
     if save_node_button:
         save_node(name_node, engineering_data, electrical_data,sustainable_data, type_node)
@@ -144,6 +146,31 @@ def update_node():
         custom_node_name = st.text_input("Enter new name for the node", value=selected_node["name"])
         new_type = st.selectbox("Select new type for the node", options=["Product 1", "Product 2", "Process", "Resource"])
 
+        st.write("Attributes to Update")
+        tab1, tab2, tab3 = st.tabs(["Engineering Data", "Electrical Data", "Sustainabilty Data"])
+
+        # Engineering Data
+        with tab1:
+            cost = st.text_input("Cost", value=selected_node["engineering"]["Cost"])
+            target_values = st.text_input("Target Value", value=selected_node["engineering"]["Target Values"])
+            mttf_data = st.text_input("MTTF", value=selected_node["engineering"]["MTTF"])
+            oee_data = st.text_input("OEE DATA (percentage)", value=selected_node["engineering"]["OEE"])
+            mttr_data = st.text_input("MTTR DATA (minutes)", value=selected_node["engineering"]["MTTR"])
+
+        # Electrical Data
+        with tab2:
+            current = st.text_input("Current (amp)", value=selected_node["electrical"]["current"])
+            voltage = st.text_input("Voltage (volts)", value=selected_node["electrical"]["voltage"])
+            power = st.text_input("Power (watt)", value=selected_node["electrical"]["power"])
+            resistance = st.text_input("Resistance (ohms)", value=selected_node["electrical"]["resistance"])
+
+        # Sustainability Data
+        with tab3:
+            CO2_footprint = st.text_input("CO2 footprint (kilotons)", value=selected_node["sustainable"]["CO2 footprint"])
+            energy_consumption = st.text_input("Energy consumption (kWh)", value=selected_node["sustainable"]["energy consumption"])
+            reusability = st.text_input("Reusability (percentage)", value=selected_node["sustainable"]["reusability"])
+            repairability = st.text_input("Repairability (percentage)", value=selected_node["sustainable"]["repairability"])
+
         # Generate a dynamic key based on the selected node
         update_node_button_key = f"update_node_button_{node_to_update}"
         update_node_button = st.button("Update Node", key=update_node_button_key, use_container_width=True, type="primary")
@@ -152,6 +179,19 @@ def update_node():
             # Update node properties
             node_list[selected_index]["name"] = custom_node_name
             node_list[selected_index]["type"] = new_type
+            node_list[selected_index]["engineering"]["Cost"] = cost
+            node_list[selected_index]["engineering"]["Target Values"] = target_values
+            node_list[selected_index]["engineering"]["MTTF"] = mttf_data
+            node_list[selected_index]["engineering"]["OEE"] = oee_data
+            node_list[selected_index]["engineering"]["MTTR"] = mttr_data
+            node_list[selected_index]["electrical"]["current"] = current
+            node_list[selected_index]["electrical"]["voltage"] = voltage
+            node_list[selected_index]["electrical"]["power"] = power
+            node_list[selected_index]["electrical"]["resistance"] = resistance
+            node_list[selected_index]["sustainable"]["CO2 footprint"] = CO2_footprint
+            node_list[selected_index]["sustainable"]["energy consumption"] = energy_consumption
+            node_list[selected_index]["sustainable"]["reusability"] = reusability
+            node_list[selected_index]["sustainable"]["repairability"] = repairability
 
             # Update edges connected to the selected node
             updated_edges1 = []
@@ -170,12 +210,14 @@ def update_node():
                     edge["target"] = custom_node_name
                 updated_edges2.append(edge)
 
-# Update session state with the modified node and edge lists
+            # Update session state with the modified node and edge lists
             st.session_state["node_list"] = node_list
             st.session_state["p1_list"] = updated_edges1
             st.session_state["p2_list"] = updated_edges2
 
             st.success(f"Node '{node_to_update}' and connected edges have been updated.")
+
+            st.experimental_rerun()  # Force the UI to update immediately
 
     except ValueError:
         st.error("There are no nodes added yet. Please create nodes or import a graph")
@@ -217,7 +259,7 @@ def create_relation():
             }
             st.session_state["p1_list"].append(product1_dict)
         # UI rendering
-        node1_col, type_col, relation_col, node2_col = st.columns(4)
+        node1_col, type1_col, relation_col, node2_col, type2_col = st.columns(5)
         # Logic
         node_list = st.session_state["node_list"]
         node_name_list = []
@@ -230,6 +272,11 @@ def create_relation():
                 if node["name"] == st.session_state["node1_select"]:
                     st.session_state["selected_value"] = node["type"]
 
+        def callback2():
+            for node in node_list:
+                if node["name"] == st.session_state["node2_select"]:
+                    st.session_state["selected_value"] = node["type"]
+
         with node1_col:
             node1_select = st.selectbox(
                 "select the first node",
@@ -237,7 +284,7 @@ def create_relation():
                 key = "node1_select",
                 on_change = callback1
             )
-        with type_col:
+        with type1_col:
             callback1()
             st.write("Type")
             st.info(st.session_state["selected_value"])
@@ -253,8 +300,13 @@ def create_relation():
             node2_select = st.selectbox(
                 "select the second node",
                 options=node_name_list,
-                key= "node2_select"  # can be added
+                key= "node2_select", # can be added
+                on_change = callback2
             )
+        with type2_col:
+            callback2()
+            st.write("Type")
+            st.info(st.session_state["selected_value"])
 
         store_edge_button1 = st.button("store relation",
                                        key="store_edge_button1",
@@ -279,7 +331,7 @@ def create_relation():
             }
             st.session_state["p2_list"].append(product2_dict)
         # UI rendering
-        node1_col, type_col, relation_col, node2_col = st.columns(4)
+        node1_col, type3_col, relation_col, node2_col, type4_col  = st.columns(5)
         # Logic
         node_list = st.session_state["node_list"]
         node_name_list = []
@@ -288,10 +340,14 @@ def create_relation():
             if node["type"] not in product_name:
                 node_name_list.append(node["name"])
 
-        def callback2():
+        def callback3():
             for node in node_list:
                 if node["name"] == st.session_state["node11_select"]:
                     st.session_state["selected_value11"] = node["type"]
+        def callback4():
+            for node in node_list:
+                if node["name"] == st.session_state["node22_select"]:
+                    st.session_state["selected_value22"] = node["type"]
 
         with node1_col:
             node11_select = st.selectbox(
@@ -301,11 +357,10 @@ def create_relation():
                 on_change = callback2
             )
 
-        with type_col:
-            callback2()
+        with type3_col:
+            callback3()
             st.write("Type")
             st.info(st.session_state["selected_value11"])
-
         with relation_col:
             # Logic
             relation_list = metamodel_dict["edges"]
@@ -321,6 +376,10 @@ def create_relation():
                 options=node_name_list,
                 key= "node22_select"  # can be added
             )
+        with type4_col:
+            callback4()
+            st.write("Type")
+            st.info(st.session_state["selected_value22"])
 
         store_edge_button2 = st.button("store relation",
                                        key="store_edge_button2",
@@ -334,6 +393,42 @@ def create_relation():
 
         st.json(st.session_state["p2_list"], expanded=False)
 
+def delete_relation():
+    import time
+    p1_list = st.session_state["p1_list"]
+    # UI rendering for Product 1 relations
+    with st.expander("Product 1 Relations"):
+        relation_names_p1 = [(edge["source"], edge["type"], edge["target"]) for edge in p1_list]
+        relation_to_delete_p1 = st.selectbox("Select a relation to delete", options=relation_names_p1)
+        delete_relation_button_p1 = st.button("Delete Relation", key="delete_relation_button_p1",
+                                              use_container_width=True, type="primary")
+
+        if delete_relation_button_p1:
+            st.session_state["p1_list"] = [edge for edge in p1_list if
+                                           (edge["source"], edge["type"], edge["target"]) != relation_to_delete_p1]
+
+            st.success(f"Relation '{relation_to_delete_p1[0]} is {relation_to_delete_p1[1]} {relation_to_delete_p1[2]}' "
+                       f"in Product 1 has been deleted.")
+            time.sleep(1)
+            st.experimental_rerun()
+
+    # UI rendering for Product 2 relations
+    p2_list = st.session_state["p2_list"]
+    with st.expander("Product 2 Relations"):
+        relation_names_p2 = [(edge["source"], edge["type"], edge["target"]) for edge in p2_list]
+        relation_to_delete_p2 = st.selectbox("Select a relation to delete", options=relation_names_p2)
+        delete_relation_button_p2 = st.button("Delete Relation", key="delete_relation_button_p2",
+                                              use_container_width=True, type="primary")
+
+        if delete_relation_button_p2:
+            st.session_state["p2_list"] = [edge for edge in p2_list if
+                                           (edge["source"], edge["type"], edge["target"]) != relation_to_delete_p2]
+
+            st.success(f"Relation '{relation_to_delete_p2[0]} is {relation_to_delete_p2[1]} {relation_to_delete_p2[2]}' "
+                       f"in Product 2 has been deleted.")
+            time.sleep(1)
+            st.experimental_rerun()
+          
 def store_graph():
     with st.expander("show individual lists"):
         st.json(st.session_state["node_list"], expanded=False)
@@ -348,42 +443,6 @@ def store_graph():
     st.session_state["graph_dict"] = graph_dict
     with st.expander("Show graph JSON"):
         st.json(st.session_state["graph_dict"])
-
-def delete_relation():
-    # Assuming you have an "edges_list" representing relations between nodes
-    p1_list = st.session_state["p1_list"]
-
-    node_list = st.session_state["node_list"]
-    node_names = [node["name"] for node in node_list]
-    relation_for_P1_to_delete = st.selectbox("Select relation for P1 to delete",
-                                             options=node_names)
-    delete_relation_for_P1_button = st.button("Delete Relation",
-                                              key="delete_relation_for_P1_button",
-                                              use_container_width=True,
-                                              type="primary")
-
-    # Remove edges connected to the deleted node
-    if delete_relation_for_P1_button:
-        st.session_state["p1_list"] = [edge for edge in p1_list
-                                            if edge["source"] != relation_for_P1_to_delete and
-                                       edge["target"] != relation_for_P1_to_delete]
-
-    # Assuming you have an "edges_list" representing relations between nodes
-    p2_list = st.session_state["p2_list"]
-
-    node_list = st.session_state["node_list"]
-    node_names = [node["name"] for node in node_list]
-    relation_for_P2_to_delete = st.selectbox("Select relation for P2 to delete", options=node_names)
-    delete_relation_for_P2_button = st.button("Delete Relation",
-                                              key="delete_relation_for_P2_button",
-                                              use_container_width=True,
-                                              type="primary")
-
-    # Remove edges connected to the deleted node
-    if delete_relation_for_P2_button:
-        st.session_state["p2_list"] = [edge for edge in p2_list
-                                            if edge["source"] != relation_for_P2_to_delete and
-                                       edge["target"] != relation_for_P2_to_delete]
 
 def visualization_graph():
 
