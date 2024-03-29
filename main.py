@@ -79,7 +79,7 @@ if __name__ == '__main__':
         analyze_graph()
 
     if selected_tab == "Advanced Analysis of the graph":
-        pass
+        analyze_graph()
     if selected_tab ==  "Export the graph":
         export_graph()
         #st.write(graph_dict_to_ppr_dict())
