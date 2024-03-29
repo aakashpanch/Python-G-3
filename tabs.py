@@ -9,9 +9,7 @@ from graph_functions import (output_nodes_and_edges, count_nodes, count_edges, d
                              check_path, is_empty, is_directed, shortest_path, specific_node,
                              specific_edge, product1_visual, product2_visual, resource_utilization)
 from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
-
-
-
+import streamlit_nested_layout
 
 def upload_graph():
     uploaded_graph = st.file_uploader("upload an existing graph", type="json")
@@ -71,56 +69,63 @@ def create_node():
         }
         return sustainable_dict
 
-    def save_node(name, engineering, electrical, sustainable, type_n):
+    def save_views(engineering, electrical, sustainable):
+        view_dict = {
+            "Engineering": engineering,
+            "Electrical": electrical,
+            "Sustainable": sustainable
+        }
+        return view_dict
+
+    def save_node(name, views, type_n):
         node_dict = {
             "name": name,
-            "engineering": engineering,
-            "electrical": electrical,
-            "sustainable": sustainable,
+            "submodels": views,
             "id": str(uuid.uuid4()),
             "type": type_n
         }
         st.session_state["node_list"].append(node_dict)
 
     name_node = st.text_input("Type in the name of the node")
-    type_node = st.selectbox("Specify the type of the node", ["Product 1","Product 2", "Process", "Resource"])
+    type_node = st.selectbox("Specify the type of the node",
+                             ["Product 1","Product 2", "Process", "Resource"])
 
-    st.write("Specify the type of the attribute")
-    tab1, tab2, tab3 = st.tabs(["Engineering Data", "Electrical Data", "Sustainabilty Data"])
+    engineering_node, electrical_node, sustainable_node = st.tabs(
+        [
+            "Engineering Data",
+            "Electrical Data",
+            "Sustainable Data"
+        ]
+    )
 
-    with tab1:
-        engineering_node_col = "Engineering Data"
-        if engineering_node_col == "Engineering Data":
-            cost = st.text_input("Cost")
-            target_values = st.text_input("Target Value")
-            mttf_data = st.text_input("MTTF")
-            oee_data = st.text_input("OEE DATA (percentage)")
-            mttr_data = st.text_input("MTTR DATA (minutes)")
+    with engineering_node:
+        cost = st.text_input("COST")
+        target_values = st.text_input("Target Value")
+        mttf_data = st.text_input("MTTF")
+        oee_data = st.text_input("OEE DATA (percentage)")
+        mttr_data = st.text_input("MTTR DATA (minutes)")
 
-            engineering_data = save_engineering(cost, target_values, mttf_data, oee_data, mttr_data)
+        engineering_data = save_engineering(cost, target_values, mttf_data, oee_data, mttr_data)
 
-    with tab2:
-        electrical_node_col = ("Electrical Data")
-        if electrical_node_col == "Electrical Data":
-            current = st.text_input("Current (amp)")
-            voltage = st.text_input("Voltage (volts)")
-            power = st.text_input("Power (watt)")
-            resistance = st.text_input("Resistance (ohms)")
-            electrical_data = save_electrical(current, voltage, power, resistance)
+    with electrical_node:
+        current = st.text_input("current (amp)")
+        voltage = st.text_input("voltage (volts)")
+        power = st.text_input("power (watt)")
+        resistance = st.text_input("resistance (ohms)")
+        electrical_data = save_electrical(current, voltage, power, resistance)
 
-    with tab3:
-        sustainable_node_col = ("Sustainability Data")
-        if sustainable_node_col == "Sustainability Data":
-            CO2_footprint = st.text_input("CO2 footprint (kilotons)")
-            energy_consumption = st.text_input("Energy consumption (kWh)")
-            reusability = st.text_input("Reusability (percentage)")
-            repairability = st.text_input("Repairability (percentage)")
-            sustainable_data = save_sustainable(CO2_footprint, energy_consumption, reusability, repairability)
+    with sustainable_node:
+        CO2_footprint = st.text_input("CO2 footprint (kilotons)")
+        energy_consumption = st.text_input("energy consumption (kWh)")
+        reusability = st.text_input("reusability (percentage)")
+        repairability = st.text_input("repairability (percentage)")
+        sustainable_data = save_sustainable(CO2_footprint, energy_consumption, reusability, repairability)
 
-    #print_hi(name_node, engineering_node)
+
+    views_data = save_views(engineering_data, electrical_data,sustainable_data)
     save_node_button = st.button("Store Node", use_container_width=True, type="primary")
     if save_node_button:
-        save_node(name_node, engineering_data, electrical_data,sustainable_data, type_node)
+        save_node(name_node, views_data, type_node)
 
     st.json(st.session_state["node_list"],expanded=False)
 
@@ -393,13 +398,30 @@ def create_relation():
 
         st.json(st.session_state["p2_list"], expanded=False)
 
+def store_graph():
+    with st.expander("show individual lists"):
+        st.json(st.session_state["node_list"], expanded=False)
+        st.json(st.session_state["p1_list"], expanded=False)
+        st.json(st.session_state["p2_list"], expanded=False)
+
+    graph_dict = {
+        "nodes": st.session_state["node_list"],
+        "product 1": st.session_state["p1_list"],
+        "product 2": st.session_state["p2_list"],
+    }
+    st.session_state["graph_dict"] = graph_dict
+    with st.expander("Show graph JSON"):
+        st.json(st.session_state["graph_dict"])
+
 def delete_relation():
     import time
     p1_list = st.session_state["p1_list"]
     # UI rendering for Product 1 relations
     with st.expander("Product 1 Relations"):
         relation_names_p1 = [(edge["source"], edge["type"], edge["target"]) for edge in p1_list]
-        relation_to_delete_p1 = st.selectbox("Select a relation to delete", options=relation_names_p1)
+        relation_to_delete_p1 = st.selectbox("Select a relation to delete", options=relation_names_p1,
+                                             key="relation_to_delete_p1"
+                                             )
         delete_relation_button_p1 = st.button("Delete Relation", key="delete_relation_button_p1",
                                               use_container_width=True, type="primary")
 
@@ -416,7 +438,8 @@ def delete_relation():
     p2_list = st.session_state["p2_list"]
     with st.expander("Product 2 Relations"):
         relation_names_p2 = [(edge["source"], edge["type"], edge["target"]) for edge in p2_list]
-        relation_to_delete_p2 = st.selectbox("Select a relation to delete", options=relation_names_p2)
+        relation_to_delete_p2 = st.selectbox("Select a relation to delete", options=relation_names_p2,
+                                             key="relation_to_delete_p2")
         delete_relation_button_p2 = st.button("Delete Relation", key="delete_relation_button_p2",
                                               use_container_width=True, type="primary")
 
@@ -428,21 +451,7 @@ def delete_relation():
                        f"in Product 2 has been deleted.")
             time.sleep(1)
             st.experimental_rerun()
-          
-def store_graph():
-    with st.expander("show individual lists"):
-        st.json(st.session_state["node_list"], expanded=False)
-        st.json(st.session_state["p1_list"], expanded=False)
-        st.json(st.session_state["p2_list"], expanded=False)
 
-    graph_dict = {
-        "nodes": st.session_state["node_list"],
-        "product 1": st.session_state["p1_list"],
-        "product 2": st.session_state["p2_list"],
-    }
-    st.session_state["graph_dict"] = graph_dict
-    with st.expander("Show graph JSON"):
-        st.json(st.session_state["graph_dict"])
 
 def visualization_graph():
 
@@ -459,251 +468,271 @@ def visualization_graph():
 
     with st.expander("Visualise the Graph of Product 1"):
 
-        graph = graphviz.Digraph()
+        tab1, tab2, tab3, tab4 = st.tabs(
+            [
+                "Visualization of PPR for Product 1",
+                "Basic Engineering View",
+                "Electrical View",
+                "Sustainable View"
+                                    ]
+        )
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 1": st.session_state["p1_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
+        with tab1:
+            graph = graphviz.Digraph()
 
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 1"]
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 1": st.session_state["p1_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name, color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 1"]
 
-    with st.expander("Basic Engineering View of Product 1"):
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name, color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
-        graph = graphviz.Digraph()
+    #with st.expander("Basic Engineering View of Product 1"):
+        with tab2:
+            graph = graphviz.Digraph()
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 1": st.session_state["p1_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 1": st.session_state["p1_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 1"]
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 1"]
 
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name,
-                       xlabel=str(node["engineering"]),
-                       color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["engineering"]),
+                           color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
-    with st.expander("Electrical View of Product 1"):
+        #with st.expander("Electrical View of Product 1"):
+        with tab3:
+            graph = graphviz.Digraph()
 
-        graph = graphviz.Digraph()
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 1": st.session_state["p1_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 1": st.session_state["p1_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 1"]
 
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 1"]
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["electrical"]),
+                           color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name,
-                       xlabel=str(node["electrical"]),
-                       color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+        #with st.expander("Sustainable View of Product 1"):
+        with tab4:
+            graph = graphviz.Digraph()
 
-    with st.expander("Sustainable View of Product 1"):
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 1": st.session_state["p1_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-        graph = graphviz.Digraph()
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 1"]
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 1": st.session_state["p1_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
-
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 1"]
-
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name,
-                       xlabel=str(node["sustainable"]),
-                       color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["sustainable"]),
+                           color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
     with st.expander("Visualise the Graph of Product 2"):
+        tab1, tab2, tab3, tab4 = st.tabs(
+            [
+                "Visualization of PPR for Product 1",
+                "Basic Engineering View",
+                "Electrical View",
+                "Sustainable View"
+            ]
+        )
 
-        graph = graphviz.Digraph()
+        with tab1:
+            graph = graphviz.Digraph()
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 2": st.session_state["p2_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 2": st.session_state["p2_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 2"]
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name, color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 2"]
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name, color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
-    with st.expander("Basic Engineering View of Product 2"):
+        #with st.expander("Basic Engineering View of Product 2"):
+        with tab2:
+            graph = graphviz.Digraph()
 
-        graph = graphviz.Digraph()
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 2": st.session_state["p2_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 2": st.session_state["p2_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 2"]
 
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 2"]
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["engineering"]),
+                           color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name,
-                       xlabel=str(node["engineering"]),
-                       color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+        #with st.expander("Electrical View of Product 2"):
+        with tab3:
+            graph = graphviz.Digraph()
 
-    with st.expander("Electrical View of Product 2"):
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 2": st.session_state["p2_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-        graph = graphviz.Digraph()
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 2"]
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 2": st.session_state["p2_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["electrical"]),
+                           color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 2"]
+        #with st.expander("Sustainable View of Product 2"):
+        with tab4:
+            graph = graphviz.Digraph()
 
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name,
-                       xlabel=str(node["electrical"]),
-                       color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 2": st.session_state["p2_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
 
-    with st.expander("Sustainable View of Product 2"):
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 2"]
 
-        graph = graphviz.Digraph()
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["sustainable"]),
+                           color= set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
-        visual_dict = {
-            "nodes": st.session_state["node_list"],
-            "product 2": st.session_state["p2_list"],
-        }
-        st.session_state["visual_dict"] = visual_dict
+        with st.expander("AGraphVisualisation"):
+            nodes = []
+            edges = []
+            graph_dict = {
+                "nodes": st.session_state["node_list"],
+                "product1": st.session_state["p1_list"],
+                "product2": st.session_state["p2_list"],
+            }
+            st.session_state["graph_dict"] = graph_dict
 
-        node_list = visual_dict["nodes"]
-        edge_list = visual_dict["product 2"]
+            node_list = graph_dict["nodes"]
+            edge_list = graph_dict["product1"]
 
-        for node in node_list:
-            node_name = node["name"]
-            graph.node(node_name, node_name,
-                       xlabel=str(node["sustainable"]),
-                       color= set_color(node["type"]))
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            graph.edge(source, target, relation)
-        st.graphviz_chart(graph)
+            for node in node_list:
+                # id=node["id"]
+                node_name = node["name"]
 
-    with st.expander("AGraph Visualisation"):
-        nodes = []
-        edges = []
-        graph_dict = {
-           "nodes": st.session_state["node_list"],
-           "product 1": st.session_state["p1_list"],
-            "product 2": st.session_state["p2_list"],
-        }
-        st.session_state["graph_dict"] = graph_dict
+                # nodes=[]
 
-        node_list = graph_dict["nodes"]
-        edge_list = graph_dict["product 1"]
+                nodes.append(Node(id=node_name,
+                                  title="Testing",
+                                  label=node_name,
+                                  size=25)
+                             # shape="circularImage",
+                             # image="http://marvel-force-chart.surge.sh/marvel_force_chart_img/top_spiderman.png")
+                             )  # includes**kwargs
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                # edges=[]
+                edges.append(Edge(source=source,
+                                  label=relation,
+                                  target=target,
+                                  # **kwargs
+                                  )
+                             )
 
-        for node in node_list:
-            # id = node["id"]
-            node_name = node["name"]
+            config = Config(width=750,
+                            height=950,
+                            directed=True,
+                            physics=True,
+                            hierarchical=False,
+                            # **kwargs
+                            )
 
-            # nodes = []
+            return_value = agraph(nodes=nodes,
+                                  edges=edges,
+                                  config=config)
 
-            nodes.append(Node(id=node_name,
-                              title= "Testing",
-                              label=node_name,
-                              size=25)
-                         # shape="circularImage",
-                         # image="http://marvel-force-chart.surge.sh/marvel_force_chart_img/top_spiderman.png")
-                         )  # includes **kwargs
-        for edge in edge_list:
-            source = edge["source"]
-            target = edge["target"]
-            relation = edge["type"]
-            # edges = []
-            edges.append(Edge(source=source,
-                              label=relation,
-                              target=target,
-                              # **kwargs
-                              )
-                         )
+            # graph.node("test")
+            # graph.edge("run","intr")
 
-        config = Config(width=750,
-                        height=950,
-                        directed=True,
-                        physics=True,
-                        hierarchical=False,
-                        # **kwargs
-                        )
-
-        return_value = agraph(nodes=nodes,
-                              edges=edges,
-                              config=config)
-
-    # graph.node("test")
-    # graph.edge("run","intr")
 
 def analyze_graph():
     G = nx.DiGraph()
@@ -834,7 +863,10 @@ def export_graph():
     }
     st.session_state["graph_dict"] = graph_dict
     graph_string = json.dumps(st.session_state["graph_dict"])
-    # st.write(graph_string)
+    #st.write(graph_string)
+
+    ppr_dict = graph_dict_to_ppr_dict()
+    ppr_json = json.dumps(ppr_dict)
 
     st.download_button(
         "Export Graph to JSON",
@@ -844,3 +876,73 @@ def export_graph():
         use_container_width=True,
         type="primary"
     )
+    st.download_button(
+        "Export Graph Dict to PPR Dict",
+        file_name="graph_PPR.json",
+        mime="application/json",
+        data=ppr_json,
+        use_container_width=True,
+        type="primary"
+    )
+
+def graph_dict_to_ppr_dict():
+    ppr_nodes = []
+    ppr_edges1 = []
+    ppr_edges2 = []
+
+    graph_dict = {
+        "nodes": st.session_state["node_list"],
+        "product 1": st.session_state["p1_list"],
+        "product 2": st.session_state["p2_list"],
+    }
+    st.session_state["graph_dict"] = graph_dict
+
+
+    for node in graph_dict.get("nodes", []):
+        ppr_node = {
+            "id": node.get("id", None),
+            "type": node.get("type", None),
+            "data": {
+                "label": node.get("name", None),
+                "props": {
+                    "views": node.get("submodels", None),
+                },
+                "style": node.get("ui_data", {}).get("style", None),
+            },
+            "position": node.get("ui_data", {}).get("position", None),
+            "width": node.get("ui_data", {}).get("width", None),
+            "height": node.get("ui_data", {}).get("height", None),
+        }
+        ppr_nodes.append(ppr_node)
+
+    for edge in graph_dict.get("product 1", []):
+        ppr_edge1 = {
+            "id": edge.get("id", None),
+            "label": edge.get("name", None),
+            "source": edge.get("source", None),
+            "target": edge.get("target", None),
+            "sourceHandle": edge.get("ui_data", {}).get("sourceHandle", None),
+            "targetHandle": edge.get("ui_data", {}).get("targetHandle", None),
+        }
+        ppr_edges1.append(ppr_edge1)
+
+    for edge in graph_dict.get("product 2", []):
+        ppr_edge2 = {
+            "id": edge.get("id", None),
+            "label": edge.get("name", None),
+            "source": edge.get("source", None),
+            "target": edge.get("target", None),
+            "sourceHandle": edge.get("ui_data", {}).get("sourceHandle", None),
+            "targetHandle": edge.get("ui_data", {}).get("targetHandle", None),
+        }
+        ppr_edges1.append(ppr_edge2)
+
+    ppr_dict = {
+        "nodes": ppr_nodes,
+        "edges": ppr_edges1 #+ ppr_edges2
+    }
+
+    #st.session_state["ppr_dict"] = ppr_dict
+    return ppr_dict
+
+
