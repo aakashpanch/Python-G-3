@@ -680,60 +680,6 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
-      with st.expander("AGraphVisualisation"):
-          nodes = []
-          edges = []
-          graph_dict = {
-              "nodes": st.session_state["node_list"],
-              "product1": st.session_state["p1_list"],
-              "product2": st.session_state["p2_list"],
-          }
-          st.session_state["graph_dict"] = graph_dict
-
-          node_list = graph_dict["nodes"]
-          edge_list = graph_dict["product1"]
-
-          for node in node_list:
-              # id=node["id"]
-              node_name = node["name"]
-
-              # nodes=[]
-
-              nodes.append(Node(id=node_name,
-                                title="Testing",
-                                label=node_name,
-                                size=25)
-                           # shape="circularImage",
-                           # image="http://marvel-force-chart.surge.sh/marvel_force_chart_img/top_spiderman.png")
-                           )  # includes**kwargs
-          for edge in edge_list:
-              source = edge["source"]
-              target = edge["target"]
-              relation = edge["type"]
-              # edges=[]
-              edges.append(Edge(source=source,
-                                label=relation,
-                                target=target,
-                                # **kwargs
-                                )
-                           )
-
-          config = Config(width=750,
-                          height=950,
-                          directed=True,
-                          physics=True,
-                          hierarchical=False,
-                          # **kwargs
-                          )
-
-          return_value = agraph(nodes=nodes,
-                                edges=edges,
-                                config=config)
-
-          # graph.node("test")
-          # graph.edge("run","intr")
-
-
 def analyze_graph():
     G = nx.DiGraph()
 
