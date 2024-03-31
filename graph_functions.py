@@ -453,17 +453,20 @@ def recurring1(graph: nx.DiGraph):
     node_name_list = []
 
     for node in node_list:
-        node_name_list.append(node["name"])
+        if node["type"] not in product_name:
+            node_name_list.append(node["name"])
 
     tab1, tab2 = st.tabs(
         ["Strongly Connected Components",
          "DFS Method - Similar Production Structures"]
     )
 
+    if len(node_list) == 0:
+        st.error("Please Create a Graph")
+        return
+
     with tab1:
         recurring_components = list(nx.strongly_connected_components(graph))
-
-        # st.write(recurring_components)
 
         for component in recurring_components:
             st.write(component)
@@ -472,6 +475,8 @@ def recurring1(graph: nx.DiGraph):
         node16_select = st.selectbox("Select Product",
                                      options=node_name_list,
                                      key="node16_select")
+
+
 
         dfs(graph,node16_select, recurring_components)
 
@@ -498,6 +503,10 @@ def recurring2(graph: nx.DiGraph):
         ["Strongly Connected Components",
          "DFS Method - Similar Production Structures"]
     )
+
+    if len(node_list) == 0:
+        st.error("Please Create a Graph")
+        return
 
     with tab1:
         recurring_components = list(nx.strongly_connected_components(graph))

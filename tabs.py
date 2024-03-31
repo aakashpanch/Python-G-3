@@ -901,7 +901,6 @@ def graph_dict_to_ppr_dict():
     #st.session_state["ppr_dict"] = ppr_dict
     return ppr_dict
 
-
 def adv_analyze_graph():
     G = nx.DiGraph()
 
