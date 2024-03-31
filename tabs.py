@@ -1,57 +1,63 @@
-import streamlit as st
-import json
-from Model import metamodel_dict
-import uuid
-import graphviz
-from streamlit_agraph import agraph, Node, Edge, Config
-import networkx as nx
+import streamlit as st  # Import Streamlit library for building web applications
+import json  # Import JSON library for handling JSON data
+from Model import metamodel_dict  # Import metamodel dictionary from Model module
+import uuid  # Import UUID library for generating unique identifiers
+import graphviz  # Import Graphviz for graph visualization
+from streamlit_agraph import agraph, Node, Edge, Config  # Import streamlit_agraph for rendering graph
+import networkx as nx  # Import NetworkX library for graph manipulation
 from graph_functions import (output_nodes_and_edges, count_nodes, count_edges, density_graph,
                              check_path, is_empty, is_directed, shortest_path, specific_node,
                              specific_edge, product1_visual, product2_visual, resource_utilization1,
                              resource_utilization2, recurring1, process_on_process1, input_product_on_process1,
-                             process_on_process2,input_product_on_process2, recurring2)
-from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
+                             process_on_process2, input_product_on_process2, recurring2)  # Import custom graph functions
+from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)  # Import algorithms for node connectivity
 
+# Function to upload an existing graph
 def upload_graph():
-    uploaded_graph = st.file_uploader("upload an existing graph", type="json")
+    uploaded_graph = st.file_uploader("upload an existing graph", type="json")  # Upload JSON file
     if uploaded_graph is not None:
-        uploaded_graph_dict = json.load(uploaded_graph)
-        uploaded_nodes = uploaded_graph_dict["nodes"]
-        uploaded_p1 = uploaded_graph_dict["product 1"]
-        uploaded_p2 = uploaded_graph_dict["product 2"]
-        st.json(uploaded_graph_dict, expanded=False)
+        uploaded_graph_dict = json.load(uploaded_graph)  # Load JSON data
+        uploaded_nodes = uploaded_graph_dict["nodes"]  # Extract nodes from the uploaded graph
+        uploaded_p1 = uploaded_graph_dict["product 1"]  # Extract product 1 edges
+        uploaded_p2 = uploaded_graph_dict["product 2"]  # Extract product 2 edges
+        st.json(uploaded_graph_dict, expanded=False)  # Display uploaded graph data
     else:
-        st.info("Please upload a graph if available")
+        st.info("Please upload a graph if available")  # Inform user to upload a graph if not available
 
+    # Button to update the graph via the uploaded file
     update_graph_button = st.button(
         "update graph via the upload",
         use_container_width=True,
         type="primary"
     )
     if update_graph_button and uploaded_graph:
+        # Update session state with uploaded graph data
         st.session_state["node_list"] = uploaded_nodes
         st.session_state["p1_list"] = uploaded_p1
         st.session_state["p2_list"] = uploaded_p2
 
+        # Create graph dictionary from uploaded graph data
         graph_dict = {
             "nodes": st.session_state["node_list"],
             "product 1": st.session_state["p1_list"],
             "product 2": st.session_state["p2_list"],
         }
-        st.session_state["graph_dict"] = graph_dict
-        #st.json(uploaded_graph_dict, expanded=False)
+        st.session_state["graph_dict"] = graph_dict  # Update session state with the new graph dictionary
 
+# Function to create a new node
 def create_node():
-    def save_engineering(cost, target_values, mttf, oee, mttr ):
+    # Function to save engineering data
+    def save_engineering(cost, target_values, mttf, oee, mttr):
         engineering_dict = {
-                "Cost": cost,
-                "Target Values": target_values,
-                "OEE": oee,
-                "MTTR": mttr,
-                "MTTF": mttf
+            "Cost": cost,
+            "Target Values": target_values,
+            "OEE": oee,
+            "MTTR": mttr,
+            "MTTF": mttf
         }
-        return(engineering_dict)
+        return engineering_dict
 
+    # Function to save electrical data
     def save_electrical(current, voltage, power, resistance):
         electrical_dict = {
             "current": current,
@@ -59,8 +65,9 @@ def create_node():
             "power": power,
             "resistance": resistance,
         }
-        return (electrical_dict)
+        return electrical_dict
 
+    # Function to save sustainable data
     def save_sustainable(CO2_footprint, energy_consumption, reusability, repairability):
         sustainable_dict = {
             "CO2 footprint": CO2_footprint,
@@ -70,6 +77,7 @@ def create_node():
         }
         return sustainable_dict
 
+    # Function to save views
     def save_views(engineering, electrical, sustainable):
         view_dict = {
             "Engineering": engineering,
@@ -78,6 +86,7 @@ def create_node():
         }
         return view_dict
 
+    # Function to save node
     def save_node(name, views, type_n):
         node_dict = {
             "name": name,
@@ -85,12 +94,14 @@ def create_node():
             "id": str(uuid.uuid4()),
             "type": type_n
         }
-        st.session_state["node_list"].append(node_dict)
+        st.session_state["node_list"].append(node_dict)  # Append node to session state node list
 
+    # Input fields for node creation
     name_node = st.text_input("Type in the name of the node")
     type_node = st.selectbox("Specify the type of the node",
-                             ["Product 1","Product 2", "Process", "Resource"])
+                             ["Product 1", "Product 2", "Process", "Resource"])
 
+    # Tabs for different data categories
     engineering_node, electrical_node, sustainable_node = st.tabs(
         [
             "Engineering Data",
@@ -100,6 +111,7 @@ def create_node():
     )
 
     with engineering_node:
+        # Input fields for engineering data
         cost = st.text_input("COST")
         target_values = st.text_input("Target Value")
         mttf_data = st.text_input("MTTF")
@@ -109,6 +121,7 @@ def create_node():
         engineering_data = save_engineering(cost, target_values, mttf_data, oee_data, mttr_data)
 
     with electrical_node:
+        # Input fields for electrical data
         current = st.text_input("current (amp)")
         voltage = st.text_input("voltage (volts)")
         power = st.text_input("power (watt)")
@@ -116,24 +129,29 @@ def create_node():
         electrical_data = save_electrical(current, voltage, power, resistance)
 
     with sustainable_node:
+        # Input fields for sustainable data
         CO2_footprint = st.text_input("CO2 footprint (kilotons)")
         energy_consumption = st.text_input("energy consumption (kWh)")
         reusability = st.text_input("reusability (percentage)")
         repairability = st.text_input("repairability (percentage)")
         sustainable_data = save_sustainable(CO2_footprint, energy_consumption, reusability, repairability)
 
+    # Combine data from different categories
+    views_data = save_views(engineering_data, electrical_data, sustainable_data)
 
-    views_data = save_views(engineering_data, electrical_data,sustainable_data)
+    # Button to store the node
     save_node_button = st.button("Store Node", use_container_width=True, type="primary")
     if save_node_button:
-        save_node(name_node, views_data, type_node)
+        save_node(name_node, views_data, type_node)  # Call save_node function to store the node
 
-    st.json(st.session_state["node_list"],expanded=False)
+    st.json(st.session_state["node_list"], expanded=False)  # Display the stored nodes
 
 def update_node():
+    # Retrieve node and edge lists from session state
     node_list = st.session_state["node_list"]
     edge1_list = st.session_state["p1_list"]
     edge2_list = st.session_state["p2_list"]
+    # Extract node names from the node list
     node_names = [node["name"] for node in node_list]
 
     try:
@@ -150,38 +168,25 @@ def update_node():
 
         # Allow users to update node properties
         custom_node_name = st.text_input("Enter new name for the node", value=selected_node["name"])
-        new_type = st.selectbox("Select new type for the node", options=["Product 1",
-                                                                         "Product 2",
-                                                                         "Process",
-                                                                         "Resource"]
-                                )
+        new_type = st.selectbox("Select new type for the node", options=["Product 1", "Product 2", "Process", "Resource"])
 
         st.write("Attributes to Update")
         tab1, tab2, tab3 = st.tabs(["Engineering Data", "Electrical Data", "Sustainabilty Data"])
 
         # Engineering Data
         with tab1:
-            cost = st.text_input("Cost",
-                                 value=selected_node["submodels"]["Engineering"]["Cost"])
-            target_values = st.text_input("Target Value",
-                                          value=selected_node["submodels"]["Engineering"]["Target Values"])
-            mttf_data = st.text_input("MTTF",
-                                      value=selected_node["submodels"]["Engineering"]["MTTF"])
-            oee_data = st.text_input("OEE DATA (percentage)",
-                                     value=selected_node["submodels"]["Engineering"]["OEE"])
-            mttr_data = st.text_input("MTTR DATA (minutes)",
-                                      value=selected_node["submodels"]["Engineering"]["MTTR"])
+            cost = st.text_input("Cost", value=selected_node["submodels"]["Engineering"]["Cost"])
+            target_values = st.text_input("Target Value", value=selected_node["submodels"]["Engineering"]["Target Values"])
+            mttf_data = st.text_input("MTTF", value=selected_node["submodels"]["Engineering"]["MTTF"])
+            oee_data = st.text_input("OEE DATA (percentage)", value=selected_node["submodels"]["Engineering"]["OEE"])
+            mttr_data = st.text_input("MTTR DATA (minutes)", value=selected_node["submodels"]["Engineering"]["MTTR"])
 
         # Electrical Data
         with tab2:
-            current = st.text_input("Current (amp)",
-                                    value=selected_node["submodels"]["Electrical"]["current"])
-            voltage = st.text_input("Voltage (volts)",
-                                    value=selected_node["submodels"]["Electrical"]["voltage"])
-            power = st.text_input("Power (watt)",
-                                  value=selected_node["submodels"]["Electrical"]["power"])
-            resistance = st.text_input("Resistance (ohms)",
-                                       value=selected_node["submodels"]["Electrical"]["resistance"])
+            current = st.text_input("Current (amp)", value=selected_node["submodels"]["Electrical"]["current"])
+            voltage = st.text_input("Voltage (volts)", value=selected_node["submodels"]["Electrical"]["voltage"])
+            power = st.text_input("Power (watt)", value=selected_node["submodels"]["Electrical"]["power"])
+            resistance = st.text_input("Resistance (ohms)", value=selected_node["submodels"]["Electrical"]["resistance"])
 
         # Sustainability Data
         with tab3:
@@ -466,129 +471,19 @@ def delete_relation():
             time.sleep(1)
             st.experimental_rerun()
 
-
 def visualization_graph():
 
     def set_color(node_type):
         color = "Red"
-        if node_type=="Product 1":
+        if node_type == "Product 1":
             color = "Blue"
-        elif node_type=="Process":
+        elif node_type == "Process":
             color = "Yellow"
-        elif node_type=="Resource":
+        elif node_type == "Resource":
             color = "Green"
         return color
 
-
     with st.expander("Visualise the Graph of Product 1"):
-
-        tab1, tab2, tab3, tab4 = st.tabs(
-            [
-                "Visualization of PPR for Product 1",
-                "Basic Engineering View",
-                "Electrical View",
-                "Sustainable View"
-                                    ]
-        )
-
-        with tab1:
-            graph = graphviz.Digraph()
-
-            visual_dict = {
-                "nodes": st.session_state["node_list"],
-                "product 1": st.session_state["p1_list"],
-            }
-            st.session_state["visual_dict"] = visual_dict
-
-            node_list = visual_dict["nodes"]
-            edge_list = visual_dict["product 1"]
-
-            for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name, color= set_color(node["type"]))
-            for edge in edge_list:
-                source = edge["source"]
-                target = edge["target"]
-                relation = edge["type"]
-                graph.edge(source, target, relation)
-            st.graphviz_chart(graph)
-
-    #with st.expander("Basic Engineering View of Product 1"):
-        with tab2:
-            graph = graphviz.Digraph()
-
-            visual_dict = {
-                "nodes": st.session_state["node_list"],
-                "product 1": st.session_state["p1_list"],
-            }
-            st.session_state["visual_dict"] = visual_dict
-
-            node_list = visual_dict["nodes"]
-            edge_list = visual_dict["product 1"]
-
-            for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Engineering"]),
-                           color= set_color(node["type"]))
-            for edge in edge_list:
-                source = edge["source"]
-                target = edge["target"]
-                relation = edge["type"]
-                graph.edge(source, target, relation)
-            st.graphviz_chart(graph)
-
-        #with st.expander("Electrical View of Product 1"):
-        with tab3:
-            graph = graphviz.Digraph()
-
-            visual_dict = {
-                "nodes": st.session_state["node_list"],
-                "product 1": st.session_state["p1_list"],
-            }
-            st.session_state["visual_dict"] = visual_dict
-
-            node_list = visual_dict["nodes"]
-            edge_list = visual_dict["product 1"]
-
-            for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Electrical"]),
-                           color= set_color(node["type"]))
-            for edge in edge_list:
-                source = edge["source"]
-                target = edge["target"]
-                relation = edge["type"]
-                graph.edge(source, target, relation)
-            st.graphviz_chart(graph)
-
-        #with st.expander("Sustainable View of Product 1"):
-        with tab4:
-            graph = graphviz.Digraph()
-
-            visual_dict = {
-                "nodes": st.session_state["node_list"],
-                "product 1": st.session_state["p1_list"],
-            }
-            st.session_state["visual_dict"] = visual_dict
-
-            node_list = visual_dict["nodes"]
-            edge_list = visual_dict["product 1"]
-
-            for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Sustainable"]),
-                           color= set_color(node["type"]))
-            for edge in edge_list:
-                source = edge["source"]
-                target = edge["target"]
-                relation = edge["type"]
-                graph.edge(source, target, relation)
-            st.graphviz_chart(graph)
-
-    with st.expander("Visualise the Graph of Product 2"):
         tab1, tab2, tab3, tab4 = st.tabs(
             [
                 "Visualization of PPR for Product 1",
@@ -599,19 +494,18 @@ def visualization_graph():
         )
 
         with tab1:
+            # Visualization of PPR for Product 1
             graph = graphviz.Digraph()
-
             visual_dict = {
                 "nodes": st.session_state["node_list"],
-                "product 2": st.session_state["p2_list"],
+                "product 1": st.session_state["p1_list"],
             }
             st.session_state["visual_dict"] = visual_dict
-
             node_list = visual_dict["nodes"]
-            edge_list = visual_dict["product 2"]
+            edge_list = visual_dict["product 1"]
             for node in node_list:
                 node_name = node["name"]
-                graph.node(node_name, node_name, color= set_color(node["type"]))
+                graph.node(node_name, node_name, color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -619,24 +513,21 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
-        #with st.expander("Basic Engineering View of Product 2"):
         with tab2:
+            # Basic Engineering View of Product 1
             graph = graphviz.Digraph()
-
             visual_dict = {
                 "nodes": st.session_state["node_list"],
-                "product 2": st.session_state["p2_list"],
+                "product 1": st.session_state["p1_list"],
             }
             st.session_state["visual_dict"] = visual_dict
-
             node_list = visual_dict["nodes"]
-            edge_list = visual_dict["product 2"]
-
+            edge_list = visual_dict["product 1"]
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
                            xlabel=str(node["submodels"]["Engineering"]),
-                           color= set_color(node["type"]))
+                           color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -644,24 +535,21 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
-        #with st.expander("Electrical View of Product 2"):
         with tab3:
+            # Electrical View of Product 1
             graph = graphviz.Digraph()
-
             visual_dict = {
                 "nodes": st.session_state["node_list"],
-                "product 2": st.session_state["p2_list"],
+                "product 1": st.session_state["p1_list"],
             }
             st.session_state["visual_dict"] = visual_dict
-
             node_list = visual_dict["nodes"]
-            edge_list = visual_dict["product 2"]
-
+            edge_list = visual_dict["product 1"]
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
                            xlabel=str(node["submodels"]["Electrical"]),
-                           color= set_color(node["type"]))
+                           color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -669,24 +557,117 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
-        #with st.expander("Sustainable View of Product 2"):
         with tab4:
+            # Sustainable View of Product 1
             graph = graphviz.Digraph()
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 1": st.session_state["p1_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 1"]
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["submodels"]["Sustainable"]),
+                           color=set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
+    with st.expander("Visualise the Graph of Product 2"):
+        tab1, tab2, tab3, tab4 = st.tabs(
+            [
+                "Visualization of PPR for Product 2",
+                "Basic Engineering View",
+                "Electrical View",
+                "Sustainable View"
+            ]
+        )
+
+        with tab1:
+            # Visualization of PPR for Product 2
+            graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
                 "product 2": st.session_state["p2_list"],
             }
             st.session_state["visual_dict"] = visual_dict
-
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 2"]
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name, color=set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
 
+        with tab2:
+            # Basic Engineering View of Product 2
+            graph = graphviz.Digraph()
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 2": st.session_state["p2_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 2"]
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["submodels"]["Engineering"]),
+                           color=set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
+
+        with tab3:
+            # Electrical View of Product 2
+            graph = graphviz.Digraph()
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 2": st.session_state["p2_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 2"]
+            for node in node_list:
+                node_name = node["name"]
+                graph.node(node_name, node_name,
+                           xlabel=str(node["submodels"]["Electrical"]),
+                           color=set_color(node["type"]))
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                graph.edge(source, target, relation)
+            st.graphviz_chart(graph)
+
+        with tab4:
+            # Sustainable View of Product 2
+            graph = graphviz.Digraph()
+            visual_dict = {
+                "nodes": st.session_state["node_list"],
+                "product 2": st.session_state["p2_list"],
+            }
+            st.session_state["visual_dict"] = visual_dict
+            node_list = visual_dict["nodes"]
+            edge_list = visual_dict["product 2"]
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
                            xlabel=str(node["submodels"]["Sustainable"]),
-                           color= set_color(node["type"]))
+                           color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -695,9 +676,9 @@ def visualization_graph():
             st.graphviz_chart(graph)
 
 def basic_analyze_graph():
-
     G = nx.DiGraph()
 
+    # Retrieve node and edge information from session state
     graph_dict = {
         "nodes": st.session_state["node_list"],
         "product 1": st.session_state["p1_list"],
@@ -710,10 +691,11 @@ def basic_analyze_graph():
     p2_list = graph_dict["product 2"]
     node_tuple_list = []
     edge_tuple_list = []
+
+    # Analyze Product 1 Graph
     with st.expander("Product 1 Graph Analysis"):
+        # Construct nodes and edges for Product 1
         for node in node_list:
-            # id = node["id"]
-            # node_name = node["name"]
             node_tuple = (node["name"], node)
             node_tuple_list.append(node_tuple)
 
@@ -721,22 +703,25 @@ def basic_analyze_graph():
             edge_tuple = (edge["source"], edge["target"], edge)
             edge_tuple_list.append(edge_tuple)
 
+        # Add nodes and edges to the graph
         G.add_nodes_from(node_tuple_list)
         G.add_edges_from(edge_tuple_list)
 
+        # Provide analysis options for Product 1
         select_functions1 = st.selectbox(label="Select Function",
-                                        options=["Output Nodes and Edges",
-                                                 "Count Nodes",
-                                                 "Count Edges",
-                                                 "Specific Node",
-                                                 "Specific Edge",
-                                                 "Density",
-                                                 "Shortest Path",
-                                                 "Check Path",
-                                                 "Check if graph is empty",
-                                                 "Is the graph directed"
-                                                 ],
-                                        key= "select_functions1")
+                                         options=["Output Nodes and Edges",
+                                                  "Count Nodes",
+                                                  "Count Edges",
+                                                  "Specific Node",
+                                                  "Specific Edge",
+                                                  "Density",
+                                                  "Shortest Path",
+                                                  "Check Path",
+                                                  "Check if graph is empty",
+                                                  "Is the graph directed"
+                                                  ],
+                                         key="select_functions1")
+        # Perform selected analysis function
         if select_functions1 == "Output Nodes and Edges":
             output_nodes_and_edges(graph=G)
         elif select_functions1 == "Count Nodes":
@@ -758,10 +743,10 @@ def basic_analyze_graph():
         elif select_functions1 == "Is the graph directed":
             is_directed(G)
 
+    # Analyze Product 2 Graph
     with st.expander("Product 2 Graph Analysis"):
+        # Construct nodes and edges for Product 2
         for node in node_list:
-            # id = node["id"]
-            # node_name = node["name"]
             node_tuple = (node["name"], node)
             node_tuple_list.append(node_tuple)
 
@@ -769,11 +754,11 @@ def basic_analyze_graph():
             edge_tuple = (edge["source"], edge["target"], edge)
             edge_tuple_list.append(edge_tuple)
 
+        # Add nodes and edges to the graph
         G.add_nodes_from(node_tuple_list)
         G.add_edges_from(edge_tuple_list)
-        # st.write(G.nodes)
-        # st.write(G.edges)
 
+        # Provide analysis options for Product 2
         select_functions = st.selectbox(label="Select Function",
                                         options=["Output Nodes and Edges",
                                                  "Count Nodes",
@@ -786,7 +771,8 @@ def basic_analyze_graph():
                                                  "Check if graph is empty",
                                                  "Is the graph directed"
                                                  ],
-                                        key= "select_functions")
+                                        key="select_functions")
+        # Perform selected analysis function
         if select_functions == "Output Nodes and Edges":
             output_nodes_and_edges(graph=G)
         elif select_functions == "Count Nodes":
@@ -808,22 +794,23 @@ def basic_analyze_graph():
         elif select_functions == "Is the graph directed":
             is_directed(G)
 
-    # st.write(G.number_of_nodes())
-    # st.write(G.number_of_edges())
-
 def export_graph():
+    # Retrieve graph data from session state
     graph_dict = {
         "nodes": st.session_state["node_list"],
         "product 1": st.session_state["p1_list"],
         "product 2": st.session_state["p2_list"],
     }
     st.session_state["graph_dict"] = graph_dict
-    graph_string = json.dumps(st.session_state["graph_dict"])
-    #st.write(graph_string)
 
+    # Convert graph data to JSON format
+    graph_string = json.dumps(st.session_state["graph_dict"])
+
+    # Convert graph data to PPR dictionary format
     ppr_dict = graph_dict_to_ppr_dict()
     ppr_json = json.dumps(ppr_dict)
 
+    # Download button for exporting graph data to JSON
     st.download_button(
         "Export Graph to JSON",
         file_name="graph.json",
@@ -832,6 +819,8 @@ def export_graph():
         use_container_width=True,
         type="primary"
     )
+
+    # Download button for exporting graph dictionary to PPR dictionary JSON
     st.download_button(
         "Export Graph Dict to PPR Dict",
         file_name="graph_PPR.json",
@@ -840,12 +829,13 @@ def export_graph():
         use_container_width=True,
         type="primary"
     )
-
 def graph_dict_to_ppr_dict():
+    # Initialize lists to store PPR nodes and edges
     ppr_nodes = []
     ppr_edges1 = []
     ppr_edges2 = []
 
+    # Retrieve graph data from session state
     graph_dict = {
         "nodes": st.session_state["node_list"],
         "product 1": st.session_state["p1_list"],
@@ -853,7 +843,7 @@ def graph_dict_to_ppr_dict():
     }
     st.session_state["graph_dict"] = graph_dict
 
-
+    # Extract node information and construct PPR nodes
     for node in graph_dict.get("nodes", []):
         ppr_node = {
             "id": node.get("id", None),
@@ -871,6 +861,7 @@ def graph_dict_to_ppr_dict():
         }
         ppr_nodes.append(ppr_node)
 
+    # Extract edge information for product 1 and construct PPR edges
     for edge in graph_dict.get("product 1", []):
         ppr_edge1 = {
             "id": edge.get("id", None),
@@ -882,6 +873,7 @@ def graph_dict_to_ppr_dict():
         }
         ppr_edges1.append(ppr_edge1)
 
+    # Extract edge information for product 2 and construct PPR edges
     for edge in graph_dict.get("product 2", []):
         ppr_edge2 = {
             "id": edge.get("id", None),
@@ -893,17 +885,19 @@ def graph_dict_to_ppr_dict():
         }
         ppr_edges1.append(ppr_edge2)
 
+    # Construct PPR dictionary containing nodes and edges information
     ppr_dict = {
         "nodes": ppr_nodes,
         "edges": ppr_edges1 #+ ppr_edges2
     }
 
-    #st.session_state["ppr_dict"] = ppr_dict
     return ppr_dict
 
 def adv_analyze_graph():
+    # Initialize a directed graph
     G = nx.DiGraph()
 
+    # Retrieve graph data from session state
     graph_dict = {
         "nodes": st.session_state["node_list"],
         "product 1": st.session_state["p1_list"],
@@ -911,28 +905,34 @@ def adv_analyze_graph():
     }
     st.session_state["graph_dict"] = graph_dict
 
+    # Extract node and edge lists
     node_list = graph_dict["nodes"]
     p1_list = graph_dict["product 1"]
     p2_list = graph_dict["product 2"]
 
+    # Analyze Product 1 graph
     with st.expander("Product 1 Graph Analysis"):
         node_tuple_list = []
         edge_tuple_list = []
 
         product_name = ["Product 2"]
 
+        # Extract nodes not related to Product 2
         for node in node_list:
             if node["type"] not in product_name:
                 node_tuple = (node["name"], node)
                 node_tuple_list.append(node_tuple)
 
+        # Add edges for Product 1
         for edge in p1_list:
             edge_tuple = (edge["source"], edge["target"], edge)
             edge_tuple_list.append(edge_tuple)
 
+        # Add nodes and edges to the graph
         G.add_nodes_from(node_tuple_list)
         G.add_edges_from(edge_tuple_list)
 
+        # Select analysis function for Product 1
         select_functions1 = st.selectbox(label="Select Function",
                                          options=["Impact of Input Product on Process Step",
                                                   "Impact of Process Step on another Process",
@@ -949,26 +949,32 @@ def adv_analyze_graph():
         elif select_functions1 == "Impact of Input Product on Process Step":
             input_product_on_process1(G)
 
+        # Clear the graph for the next analysis
         G.clear()
 
+    # Analyze Product 2 graph
     with st.expander("Product 2 Graph Analysis"):
         node_tuple_list = []
         edge_tuple_list = []
 
         product_name = ["Product 1"]
 
+        # Extract nodes not related to Product 1
         for node in node_list:
             if node["type"] not in product_name:
                 node_tuple = (node["name"], node)
                 node_tuple_list.append(node_tuple)
 
+        # Add edges for Product 2
         for edge in p2_list:
             edge_tuple = (edge["source"], edge["target"], edge)
             edge_tuple_list.append(edge_tuple)
 
+        # Add nodes and edges to the graph
         G.add_nodes_from(node_tuple_list)
         G.add_edges_from(edge_tuple_list)
 
+        # Select analysis function for Product 2
         select_functions2 = st.selectbox(label="Select Function",
                                          options=["Impact of Input Product on Process Step",
                                                   "Impact of Process Step on another Process",
@@ -984,4 +990,3 @@ def adv_analyze_graph():
             process_on_process2(G)
         elif select_functions2 == "Impact of Input Product on Process Step":
             input_product_on_process2(G)
-            #check_path(G)
