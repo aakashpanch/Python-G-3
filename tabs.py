@@ -246,34 +246,49 @@ def update_node():
     except ValueError:
         st.error("There are no nodes added yet. Please create nodes or import a graph")
 
-# Function to delete a node
+
 def delete_node():
     import time
+    
+    # Extract the node list and node names
     node_list = st.session_state["node_list"]
     node_names = [node["name"] for node in node_list]
 
+    # Dropdown to select the node to delete
     node_to_delete = st.selectbox("Select node to delete", options=node_names)
+    
+    # Button to confirm node deletion
     delete_node_button = st.button("Delete Node", key="delete_node_button", use_container_width=True, type="primary")
 
     if delete_node_button:
-        # Remove the node from the node list
+        # Remove the selected node from the node list
         st.session_state["node_list"] = [node for node in node_list if node["name"] != node_to_delete]
 
-        # Remove edges connected to the deleted node from the edge list
+        # Remove edges connected to the deleted node from the edge lists of Product 1 and Product 2
         st.session_state["p1_list"] = [edge for edge in st.session_state["p1_list"]
-                                         if edge["source"] != node_to_delete and edge["target"] != node_to_delete]
-
+                                        if edge["source"] != node_to_delete and edge["target"] != node_to_delete]
         st.session_state["p2_list"] = [edge for edge in st.session_state["p2_list"]
-                                       if edge["source"] != node_to_delete and edge["target"] != node_to_delete]
-        st.session_state["deleted_node"] = node_to_delete  # Store the deleted node name
+                                        if edge["source"] != node_to_delete and edge["target"] != node_to_delete]
+        
+        # Store the name of the deleted node
+        st.session_state["deleted_node"] = node_to_delete  
 
+        # Display success message after deleting the node
         st.success(f"Node '{node_to_delete}' has been deleted.")
+        
+        # Add a delay for better user experience
         time.sleep(1)
+        
+        # Rerun the Streamlit app to update the UI
         st.experimental_rerun()
 
+
 def create_relation():
+    # Expander for Product 1
     with st.expander("Product 1"):
         product_name = ["Product 2"]
+        
+        # Function to save relations for Product 1
         def save_product1(node1, relation, node2):
             product1_dict = {
                 "source": node1,
@@ -282,15 +297,18 @@ def create_relation():
                 "id": str(uuid.uuid4()),
             }
             st.session_state["p1_list"].append(product1_dict)
-        # UI rendering
+        
+        # UI rendering for Product 1
         node1_col, type1_col, relation_col, node2_col, type2_col = st.columns(5)
-        # Logic
+        
+        # Extracting node information
         node_list = st.session_state["node_list"]
         node_name_list = []
-        node_type_list = []
         for node in node_list:
             if node["type"] not in product_name:
                 node_name_list.append(node["name"])
+        
+        # Callback functions for node selection
         def callback1():
             for node in node_list:
                 if node["name"] == st.session_state["node1_select"]:
@@ -301,51 +319,68 @@ def create_relation():
                 if node["name"] == st.session_state["node2_select"]:
                     st.session_state["selected_value"] = node["type"]
 
+        # Dropdown for selecting first node of relation
         with node1_col:
             node1_select = st.selectbox(
                 "select the first node",
                 options=node_name_list,
-                key = "node1_select",
-                on_change = callback1
+                key="node1_select",
+                on_change=callback1
             )
+        
+        # Display type of first node
         with type1_col:
             callback1()
             st.write("Type")
             st.info(st.session_state["selected_value"])
+        
+        # Dropdown for selecting relation
         with relation_col:
-            # Logic
+            # Extract relation options
             relation_list = metamodel_dict["edges"]
             # UI rendering
             relation_name = st.selectbox(
                 "Specify the relation",
                 options=relation_list
             )
+        
+        # Dropdown for selecting second node of relation
         with node2_col:
             node2_select = st.selectbox(
                 "select the second node",
                 options=node_name_list,
-                key= "node2_select", # can be added
-                on_change = callback2
+                key="node2_select",  # can be added
+                on_change=callback2
             )
+        
+        # Display type of second node
         with type2_col:
             callback2()
             st.write("Type")
             st.info(st.session_state["selected_value"])
 
+        # Button to store the relation for Product 1
         store_edge_button1 = st.button("store relation",
                                        key="store_edge_button1",
                                        use_container_width=True,
                                        type="primary")
         if store_edge_button1:
             save_product1(node1_select, relation_name, node2_select)
+        
+        # Visualize Product 1 relations
         product1_visual()
-        #visualization_graph()
+        
+        # Display relation information
         st.write(f"{node1_select} is {relation_name}  {node2_select}")
 
-        st.json(st.session_state["p1_list"],expanded=False)
+        # Display stored relations in JSON format
+        st.json(st.session_state["p1_list"], expanded=False)
 
+    # Expander for Product 2
     with st.expander("Product 2"):
         product_name = ["Product 1"]
+        
+        # Function to save relations for Product 2
         def save_product2(node1, relation, node2):
             product2_dict = {
                 "source": node1,
@@ -354,125 +389,179 @@ def create_relation():
                 "id": str(uuid.uuid4()),
             }
             st.session_state["p2_list"].append(product2_dict)
-        # UI rendering
-        node1_col, type3_col, relation_col, node2_col, type4_col  = st.columns(5)
-        # Logic
+        
+        # UI rendering for Product 2
+        node1_col, type3_col, relation_col, node2_col, type4_col = st.columns(5)
+        
+        # Extracting node information for Product 2
         node_list = st.session_state["node_list"]
         node_name_list = []
-
         for node in node_list:
             if node["type"] not in product_name:
                 node_name_list.append(node["name"])
-
+        
+        # Callback functions for node selection for Product 2
         def callback3():
             for node in node_list:
                 if node["name"] == st.session_state["node11_select"]:
                     st.session_state["selected_value11"] = node["type"]
+        
         def callback4():
             for node in node_list:
                 if node["name"] == st.session_state["node22_select"]:
                     st.session_state["selected_value22"] = node["type"]
 
+        # Dropdown for selecting first node of relation for Product 2
         with node1_col:
             node11_select = st.selectbox(
                 "select the first node",
                 options=node_name_list,
-                key = "node11_select",
-                on_change = callback2
+                key="node11_select",
+                on_change=callback2
             )
 
+        # Display type of first node for Product 2
         with type3_col:
             callback3()
             st.write("Type")
             st.info(st.session_state["selected_value11"])
+        
+        # Dropdown for selecting relation for Product 2
         with relation_col:
-            # Logic
+            # Extract relation options
             relation_list = metamodel_dict["edges"]
             # UI rendering
             relation2_name = st.selectbox(
                 "Specify the relation",
                 options=relation_list,
-                key = "relation2_name"
+                key="relation2_name"
             )
+        
+        # Dropdown for selecting second node of relation for Product 2
         with node2_col:
             node22_select = st.selectbox(
                 "select the second node",
                 options=node_name_list,
-                key= "node22_select"  # can be added
+                key="node22_select"  # can be added
             )
+        
+        # Display type of second node for Product 2
         with type4_col:
             callback4()
             st.write("Type")
             st.info(st.session_state["selected_value22"])
 
+        # Button to store the relation for Product 2
         store_edge_button2 = st.button("store relation",
                                        key="store_edge_button2",
                                        use_container_width=True,
                                        type="primary")
         if store_edge_button2:
             save_product2(node11_select, relation2_name, node22_select)
-        #visualization_graph()
+        
+        # Visualize Product 2 relations
         product2_visual()
+        
+        # Display relation information for Product 2
         st.write(f"{node1_select} is {relation2_name}  {node2_select}")
 
+        # Display stored relations for Product 2 in JSON format
         st.json(st.session_state["p2_list"], expanded=False)
+
 
 def store_graph():
+    # Expander to show individual lists
     with st.expander("show individual lists"):
+        # Display node list in JSON format
         st.json(st.session_state["node_list"], expanded=False)
+        # Display relations for Product 1 in JSON format
         st.json(st.session_state["p1_list"], expanded=False)
+        # Display relations for Product 2 in JSON format
         st.json(st.session_state["p2_list"], expanded=False)
 
+    # Create a dictionary containing the entire graph data
     graph_dict = {
-        "nodes": st.session_state["node_list"],
-        "product 1": st.session_state["p1_list"],
-        "product 2": st.session_state["p2_list"],
+        "nodes": st.session_state["node_list"],  # Nodes of the graph
+        "product 1": st.session_state["p1_list"],  # Relations for Product 1
+        "product 2": st.session_state["p2_list"],  # Relations for Product 2
     }
+    # Store the graph dictionary in session state
     st.session_state["graph_dict"] = graph_dict
+    
+    # Expander to show the entire graph data in JSON format
     with st.expander("Show graph JSON"):
         st.json(st.session_state["graph_dict"])
 
+
 def delete_relation():
     import time
+    
+    # Extract relations for Product 1
     p1_list = st.session_state["p1_list"]
+    
     # UI rendering for Product 1 relations
     with st.expander("Product 1 Relations"):
+        # Extract relation names for Product 1
         relation_names_p1 = [(edge["source"], edge["type"], edge["target"]) for edge in p1_list]
+        
+        # Dropdown to select a relation to delete for Product 1
         relation_to_delete_p1 = st.selectbox("Select a relation to delete", options=relation_names_p1,
-                                             key="relation_to_delete_p1"
-                                             )
+                                             key="relation_to_delete_p1")
+        
+        # Button to delete the selected relation for Product 1
         delete_relation_button_p1 = st.button("Delete Relation", key="delete_relation_button_p1",
                                               use_container_width=True, type="primary")
 
         if delete_relation_button_p1:
+            # Remove the selected relation from the list of relations for Product 1
             st.session_state["p1_list"] = [edge for edge in p1_list if
                                            (edge["source"], edge["type"], edge["target"]) != relation_to_delete_p1]
 
+            # Display success message after deleting the relation for Product 1
             st.success(f"Relation '{relation_to_delete_p1[0]} is {relation_to_delete_p1[1]} {relation_to_delete_p1[2]}' "
                        f"in Product 1 has been deleted.")
+            
+            # Add a delay for better user experience
             time.sleep(1)
+            
+            # Rerun the Streamlit app to update the UI
             st.experimental_rerun()
 
-    # UI rendering for Product 2 relations
+    # Extract relations for Product 2
     p2_list = st.session_state["p2_list"]
+    
+    # UI rendering for Product 2 relations
     with st.expander("Product 2 Relations"):
+        # Extract relation names for Product 2
         relation_names_p2 = [(edge["source"], edge["type"], edge["target"]) for edge in p2_list]
+        
+        # Dropdown to select a relation to delete for Product 2
         relation_to_delete_p2 = st.selectbox("Select a relation to delete", options=relation_names_p2,
                                              key="relation_to_delete_p2")
+        
+        # Button to delete the selected relation for Product 2
         delete_relation_button_p2 = st.button("Delete Relation", key="delete_relation_button_p2",
                                               use_container_width=True, type="primary")
 
         if delete_relation_button_p2:
+            # Remove the selected relation from the list of relations for Product 2
             st.session_state["p2_list"] = [edge for edge in p2_list if
                                            (edge["source"], edge["type"], edge["target"]) != relation_to_delete_p2]
 
+            # Display success message after deleting the relation for Product 2
             st.success(f"Relation '{relation_to_delete_p2[0]} is {relation_to_delete_p2[1]} {relation_to_delete_p2[2]}' "
                        f"in Product 2 has been deleted.")
+            
+            # Add a delay for better user experience
             time.sleep(1)
+            
+            # Rerun the Streamlit app to update the UI
             st.experimental_rerun()
 
-def visualization_graph():
 
+# Define a function to visualize the graph with different views for Product 1 and Product 2
+def visualization_graph():
+    # Function to set color based on node type
     def set_color(node_type):
         color = "Red"
         if node_type == "Product 1":
@@ -483,7 +572,9 @@ def visualization_graph():
             color = "Green"
         return color
 
+    # Visualization of graph for Product 1 and Product 2
     with st.expander("Visualise the Graph of Product 1"):
+        # Tabs for different views of Product 1
         tab1, tab2, tab3, tab4 = st.tabs(
             [
                 "Visualization of PPR for Product 1",
@@ -493,8 +584,8 @@ def visualization_graph():
             ]
         )
 
+        # Visualization of PPR for Product 1
         with tab1:
-            # Visualization of PPR for Product 1
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -515,8 +606,8 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
+        # Basic Engineering View of Product 1
         with tab2:
-            # Basic Engineering View of Product 1
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -530,8 +621,8 @@ def visualization_graph():
                 if node["type"] not in product_name:
                     node_name = node["name"]
                     graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Engineering"]),
-                           color=set_color(node["type"]))
+                               xlabel=str(node["submodels"]["Engineering"]),
+                               color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -539,8 +630,8 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
+        # Electrical View of Product 1
         with tab3:
-            # Electrical View of Product 1
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -554,8 +645,8 @@ def visualization_graph():
                 if node["type"] not in product_name:
                     node_name = node["name"]
                     graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Electrical"]),
-                           color=set_color(node["type"]))
+                               xlabel=str(node["submodels"]["Electrical"]),
+                               color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -563,8 +654,8 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
+        # Sustainable View of Product 1
         with tab4:
-            # Sustainable View of Product 1
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -578,8 +669,8 @@ def visualization_graph():
                 if node["type"] not in product_name:
                     node_name = node["name"]
                     graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Sustainable"]),
-                           color=set_color(node["type"]))
+                               xlabel=str(node["submodels"]["Sustainable"]),
+                               color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -587,7 +678,9 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
+    # Visualization of graph for Product 2
     with st.expander("Visualise the Graph of Product 2"):
+        # Tabs for different views of Product 2
         tab1, tab2, tab3, tab4 = st.tabs(
             [
                 "Visualization of PPR for Product 2",
@@ -597,8 +690,8 @@ def visualization_graph():
             ]
         )
 
+        # Visualization of PPR for Product 2
         with tab1:
-            # Visualization of PPR for Product 2
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -619,8 +712,8 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
+        # Basic Engineering View of Product 2
         with tab2:
-            # Basic Engineering View of Product 2
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -643,8 +736,8 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
+        # Electrical View of Product 2
         with tab3:
-            # Electrical View of Product 2
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -667,8 +760,8 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
+        # Sustainable View of Product 2
         with tab4:
-            # Sustainable View of Product 2
             graph = graphviz.Digraph()
             visual_dict = {
                 "nodes": st.session_state["node_list"],
@@ -690,6 +783,7 @@ def visualization_graph():
                 relation = edge["type"]
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
+
 
 def basic_analyze_graph():
     G = nx.DiGraph()
