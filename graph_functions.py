@@ -443,10 +443,22 @@ def resource_utilization2(graph):
             st.error(f"There is no path between {node11_select} and {node22_select}")
 
 
-def recurring(graph: nx.DiGraph):
+def recurring1(graph: nx.DiGraph):
+    graph_dict = st.session_state["graph_dict"]
+    node_list = graph_dict["nodes"]
+    edge1_list = graph_dict["product 1"]
+    edge2_list = graph_dict["product 2"]
+
+    node_list = st.session_state["node_list"]
+
+    node_name_list = []
+
+    for node in node_list:
+        node_name_list.append(node["name"])
+
     tab1, tab2 = st.tabs(
         ["Strongly Connected Components",
-         "Louvian Method - Similar Production Structures"]
+         "DFS Method - Similar Production Structures"]
     )
 
     with tab1:
@@ -457,20 +469,81 @@ def recurring(graph: nx.DiGraph):
         for component in recurring_components:
             st.write(component)
 
-    # with tab2:
+    with tab2:
+        node16_select = st.selectbox("Select Product",
+                                     options=node_name_list,
+                                     key="node16_select")
 
-    #   partition = community.best_partition(graph)
+        dfs(graph,node16_select, recurring_components)
 
-    #  communities = []
+        st.write("Identified Recurring Components:")
+        for component in recurring_components:
+            st.write(component)
 
-    # for node, community_id in partition.items():
-    #    if community_id not in communities:
-    #       communities[community_id] = [node]
-    #  else:
-    #     communities[community_id].append(node)
 
-    # for community_id, nodes in communities.items():
-    #   print(f"Community {community_id}: {nodes}")
+def recurring2(graph: nx.DiGraph):
+    graph_dict = st.session_state["graph_dict"]
+    node_list = graph_dict["nodes"]
+    edge1_list = graph_dict["product 1"]
+    edge2_list = graph_dict["product 2"]
+
+    node_list = st.session_state["node_list"]
+
+    node_name_list = []
+    product_name = ["Product 1"]
+    for node in node_list:
+        if node["type"] not in product_name :
+            node_name_list.append(node["name"])
+
+    tab1, tab2 = st.tabs(
+        ["Strongly Connected Components",
+         "DFS Method - Similar Production Structures"]
+    )
+
+    with tab1:
+        recurring_components = list(nx.strongly_connected_components(graph))
+
+        # st.write(recurring_components)
+
+        for component in recurring_components:
+            st.write(component)
+
+    with tab2:
+        node17_select = st.selectbox("Select Product",
+                                     options=node_name_list,
+                                     key="node17_select")
+
+        dfs(graph, node17_select, recurring_components)
+
+        st.write("Identified Recurring Components:")
+        for component in recurring_components:
+            st.write(component)
+
+def dfs(graph, start_node, recurring_components):
+
+    visited = set()  # Keep track of visited nodes
+    stack = [start_node]  # Use a stack for DFS
+    current_subgraph = []  # Track current sub-graph during traversal
+
+    while stack:
+        current_node = stack.pop()
+        if current_node not in visited:
+          visited.add(current_node)
+          current_subgraph.append(current_node)  # Add current node to sub-graph
+
+          for neighbor in graph[current_node]:
+            stack.append(neighbor)
+            dfs(graph, neighbor, recurring_components)  # Recursive DFS call
+
+        # Check for recurring sub-graph at the end of a branch (leaf node or backtrack)
+        if current_node not in visited and len(current_subgraph) > 1:  # Avoid single-node sub-graphs
+          if current_subgraph not in recurring_components:
+            recurring_components.add(tuple(current_subgraph))  # Store as immutable tuple for hashable set
+          current_subgraph.pop()  # Remove current node from sub-graph (backtrack)
+
+    recurring_components = set()
+    #dfs(graph, node16_select, recurring_components)
+
 
 
 def process_on_process1(graph: nx.DiGraph):
@@ -606,6 +679,7 @@ def input_product_on_process1(graph: nx.DiGraph):
     edge2_list = graph_dict["product 2"]
 
     node_list = st.session_state["node_list"]
+    node_name_list = []
 
     tab1, tab2 = st.tabs(
         [
@@ -615,7 +689,32 @@ def input_product_on_process1(graph: nx.DiGraph):
     )
 
     with tab1:
-        pass
+
+        for node in node_list:
+            if node["type"] == "Process":
+                node_name_list.append(node["name"])
+
+        r = len(node_name_list)
+
+        st.info("Process Utilisation")
+
+        st.write(f" Number of Processes in the system {r}")
+
+        name_list = []
+        c = 0
+
+        for name in node_name_list:
+            for edge in edge1_list:
+                if name not in name_list and (name == edge["source"] or name == edge["target"]):
+                    name_list.append(name)
+                    c = c + 1
+        st.write(f" Number of Processes performed in the system {c}")
+
+        if r == 0:
+            st.write(f"Process Utilisation is 0")
+        else:
+            x = (c / r) * 100
+            st.write(f"Process Utilisation is {x} percentage")
 
     with tab2:
         import graphviz
@@ -669,6 +768,7 @@ def input_product_on_process2(graph: nx.DiGraph):
     edge2_list = graph_dict["product 2"]
 
     node_list = st.session_state["node_list"]
+    node_name_list = []
 
     tab1, tab2 = st.tabs(
         [
@@ -678,7 +778,31 @@ def input_product_on_process2(graph: nx.DiGraph):
     )
 
     with tab1:
-        pass
+        for node in node_list:
+            if node["type"] == "Process":
+                node_name_list.append(node["name"])
+
+        r = len(node_name_list)
+
+        st.info("Process Utilisation")
+
+        st.write(f" Number of Processes in the system {r}")
+
+        name_list = []
+        c = 0
+
+        for name in node_name_list:
+            for edge in edge2_list:
+                if name not in name_list and (name == edge["source"] or name == edge["target"]):
+                    name_list.append(name)
+                    c = c + 1
+        st.write(f" Number of Processes performed in the system {c}")
+
+        if r == 0:
+            st.write(f"Process Utilisation is 0")
+        else:
+            x = (c / r) * 100
+            st.write(f"Process Utilisation is {x} percentage")
 
     with tab2:
         import graphviz

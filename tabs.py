@@ -9,8 +9,8 @@ import community
 from graph_functions import (output_nodes_and_edges, count_nodes, count_edges, density_graph,
                              check_path, is_empty, is_directed, shortest_path, specific_node,
                              specific_edge, product1_visual, product2_visual, resource_utilization1,
-                             resource_utilization2, recurring, process_on_process1, input_product_on_process1,
-                             process_on_process2,input_product_on_process2)
+                             resource_utilization2, recurring1, process_on_process1, input_product_on_process1,
+                             process_on_process2,input_product_on_process2, recurring2)
 from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
 import streamlit_nested_layout
 
@@ -997,22 +997,22 @@ def adv_analyze_graph():
         if select_functions1 == "Impact of Resource on Product":
             resource_utilization1(graph=G)
         elif select_functions1 == "Recurring Components":
-            recurring(G)
+            recurring1(G)
         elif select_functions1 == "Impact of Process Step on another Process":
             process_on_process1(G)
         elif select_functions1 == "Impact of Input Product on Process Step":
             input_product_on_process1(G)
 
     with st.expander("Product 2 Graph Analysis"):
+
         for node in node_list:
-            # id = node["id"]
-            # node_name = node["name"]
             node_tuple = (node["name"], node)
             node_tuple_list.append(node_tuple)
 
         for edge in p2_list:
             edge_tuple = (edge["source"], edge["target"], edge)
             edge_tuple_list.append(edge_tuple)
+            #st.write(edge_tuple_list)
 
         G.add_nodes_from(node_tuple_list)
         G.add_edges_from(edge_tuple_list)
@@ -1027,7 +1027,8 @@ def adv_analyze_graph():
         if select_functions2 == "Impact of Resource on Product":
             resource_utilization2(graph=G)
         elif select_functions2 == "Recurring Components":
-            recurring(G)
+            recurring2(G)
+            #st.write(edge_tuple_list)
         elif select_functions2 == "Impact of Process Step on another Process":
             process_on_process2(G)
         elif select_functions2 == "Impact of Input Product on Process Step":
