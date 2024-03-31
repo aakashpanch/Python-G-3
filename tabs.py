@@ -12,7 +12,6 @@ from graph_functions import (output_nodes_and_edges, count_nodes, count_edges, d
                              resource_utilization2, recurring1, process_on_process1, input_product_on_process1,
                              process_on_process2,input_product_on_process2, recurring2)
 from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
-import streamlit_nested_layout
 
 def upload_graph():
     uploaded_graph = st.file_uploader("upload an existing graph", type="json")
@@ -696,60 +695,6 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
-        with st.expander("AGraphVisualisation"):
-            nodes = []
-            edges = []
-            graph_dict = {
-                "nodes": st.session_state["node_list"],
-                "product1": st.session_state["p1_list"],
-                "product2": st.session_state["p2_list"],
-            }
-            st.session_state["graph_dict"] = graph_dict
-
-            node_list = graph_dict["nodes"]
-            edge_list = graph_dict["product1"]
-
-            for node in node_list:
-                # id=node["id"]
-                node_name = node["name"]
-
-                # nodes=[]
-
-                nodes.append(Node(id=node_name,
-                                  title="Testing",
-                                  label=node_name,
-                                  size=25)
-                             # shape="circularImage",
-                             # image="http://marvel-force-chart.surge.sh/marvel_force_chart_img/top_spiderman.png")
-                             )  # includes**kwargs
-            for edge in edge_list:
-                source = edge["source"]
-                target = edge["target"]
-                relation = edge["type"]
-                # edges=[]
-                edges.append(Edge(source=source,
-                                  label=relation,
-                                  target=target,
-                                  # **kwargs
-                                  )
-                             )
-
-            config = Config(width=750,
-                            height=950,
-                            directed=True,
-                            physics=True,
-                            hierarchical=False,
-                            # **kwargs
-                            )
-
-            return_value = agraph(nodes=nodes,
-                                  edges=edges,
-                                  config=config)
-
-            # graph.node("test")
-            # graph.edge("run","intr")
-
-
 def basic_analyze_graph():
 
     G = nx.DiGraph()
@@ -971,14 +916,17 @@ def adv_analyze_graph():
     node_list = graph_dict["nodes"]
     p1_list = graph_dict["product 1"]
     p2_list = graph_dict["product 2"]
-    node_tuple_list = []
-    edge_tuple_list = []
 
     with st.expander("Product 1 Graph Analysis"):
+        node_tuple_list = []
+        edge_tuple_list = []
+
+        product_name = ["Product 2"]
 
         for node in node_list:
-            node_tuple = (node["name"], node)
-            node_tuple_list.append(node_tuple)
+            if node["type"] not in product_name:
+                node_tuple = (node["name"], node)
+                node_tuple_list.append(node_tuple)
 
         for edge in p1_list:
             edge_tuple = (edge["source"], edge["target"], edge)
@@ -1003,16 +951,22 @@ def adv_analyze_graph():
         elif select_functions1 == "Impact of Input Product on Process Step":
             input_product_on_process1(G)
 
+        G.clear()
+
     with st.expander("Product 2 Graph Analysis"):
+        node_tuple_list = []
+        edge_tuple_list = []
+
+        product_name = ["Product 1"]
 
         for node in node_list:
-            node_tuple = (node["name"], node)
-            node_tuple_list.append(node_tuple)
+            if node["type"] not in product_name:
+                node_tuple = (node["name"], node)
+                node_tuple_list.append(node_tuple)
 
         for edge in p2_list:
             edge_tuple = (edge["source"], edge["target"], edge)
             edge_tuple_list.append(edge_tuple)
-            #st.write(edge_tuple_list)
 
         G.add_nodes_from(node_tuple_list)
         G.add_edges_from(edge_tuple_list)
@@ -1028,7 +982,6 @@ def adv_analyze_graph():
             resource_utilization2(graph=G)
         elif select_functions2 == "Recurring Components":
             recurring2(G)
-            #st.write(edge_tuple_list)
         elif select_functions2 == "Impact of Process Step on another Process":
             process_on_process2(G)
         elif select_functions2 == "Impact of Input Product on Process Step":

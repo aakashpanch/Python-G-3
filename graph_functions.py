@@ -555,59 +555,50 @@ def process_on_process1(graph: nx.DiGraph):
 
     node_list = st.session_state["node_list"]
 
-    tab1, tab2 = st.tabs(
-        [
-            "Process",
-            "Reachability"
-        ]
-    )
+    st.info("Reachabiity")
 
-    with tab1:
-        pass
+    import graphviz
+    node1_col, node2_col = st.columns(2)
 
-    with tab2:
-        import graphviz
-        node1_col, node2_col = st.columns(2)
+    node_name_list = []
+    node_name_list1 = []
 
-        node_name_list = []
-        node_name_list1 = []
+    for node in node_list:
+        if node["type"] == "Process":
+            node_name_list.append(node["name"])
+    # st.write(node_name_list)
 
-        for node in node_list:
-            if node["type"] == "Process":
-                node_name_list.append(node["name"])
-        # st.write(node_name_list)
+    for node in node_list:
+        if node["type"] == "Process":
+            node_name_list1.append(node["name"])
 
-        for node in node_list:
-            if node["type"] == "Process":
-                node_name_list1.append(node["name"])
+    with node1_col:
+        node12_select = st.selectbox("Select Process",
+                                     options=node_name_list,
+                                     key="node12_select"
+                                     )
+    with node2_col:
+        node23_select = st.selectbox("Select Process",
+                                     options=node_name_list1,
+                                     key="node23_select"
+                                     )
+    try:
+        shortest_path_for_graph = nx.shortest_path(graph, node12_select, node23_select)
+        st.success(f"The Process {node12_select} will have an impact on {node23_select}")
+        st.write(shortest_path_for_graph)
+        subgraph = graph.subgraph(shortest_path_for_graph)
+        graphviz_graph = graphviz.Digraph()
+        st.write(subgraph.edges)
 
-        with node1_col:
-            node12_select = st.selectbox("Select Process",
-                                         options=node_name_list,
-                                         key="node12_select"
-                                         )
-        with node2_col:
-            node23_select = st.selectbox("Select Process",
-                                         options=node_name_list1,
-                                         key="node23_select"
-                                         )
-        try:
-            shortest_path_for_graph = nx.shortest_path(graph, node12_select, node23_select)
-            st.success(f"The Process {node12_select} will have an impact on {node23_select}")
-            st.write(shortest_path_for_graph)
-            subgraph = graph.subgraph(shortest_path_for_graph)
-            graphviz_graph = graphviz.Digraph()
-            st.write(subgraph.edges)
+        for node in subgraph.nodes:
+            graphviz_graph.node(str(node))
+            # Add edges to the Graphviz object
 
-            for node in subgraph.nodes:
-                graphviz_graph.node(str(node))
-                # Add edges to the Graphviz object
-
-            for edge in subgraph.edges:
-                graphviz_graph.edge(str(edge[0]), str(edge[1]))
-            st.graphviz_chart(graphviz_graph)
-        except nx.NetworkXNoPath:
-            st.error(f"There is no path between {node12_select} and {node23_select}")
+        for edge in subgraph.edges:
+            graphviz_graph.edge(str(edge[0]), str(edge[1]))
+        st.graphviz_chart(graphviz_graph)
+    except nx.NetworkXNoPath:
+        st.error(f"There is no path between {node12_select} and {node23_select}")
 
 def process_on_process2(graph: nx.DiGraph):
 
