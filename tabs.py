@@ -5,7 +5,6 @@ import uuid
 import graphviz
 from streamlit_agraph import agraph, Node, Edge, Config
 import networkx as nx
-import community
 from graph_functions import (output_nodes_and_edges, count_nodes, count_edges, density_graph,
                              check_path, is_empty, is_directed, shortest_path, specific_node,
                              specific_edge, product1_visual, product2_visual, resource_utilization1,
