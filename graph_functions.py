@@ -452,6 +452,8 @@ def recurring1(graph: nx.DiGraph):
 
     node_name_list = []
 
+    product_name = ["Product 2"]
+
     for node in node_list:
         if node["type"] not in product_name:
             node_name_list.append(node["name"])
@@ -527,6 +529,7 @@ def recurring2(graph: nx.DiGraph):
         for component in recurring_components:
             st.write(component)
 
+
 def dfs(graph, start_node, recurring_components):
 
     visited = set()  # Keep track of visited nodes
@@ -551,7 +554,6 @@ def dfs(graph, start_node, recurring_components):
 
     recurring_components = set()
     #dfs(graph, node16_select, recurring_components)
-
 
 
 def process_on_process1(graph: nx.DiGraph):
@@ -607,6 +609,7 @@ def process_on_process1(graph: nx.DiGraph):
         st.graphviz_chart(graphviz_graph)
     except nx.NetworkXNoPath:
         st.error(f"There is no path between {node12_select} and {node23_select}")
+
 
 def process_on_process2(graph: nx.DiGraph):
 
@@ -670,6 +673,7 @@ def process_on_process2(graph: nx.DiGraph):
             st.graphviz_chart(graphviz_graph)
         except nx.NetworkXNoPath:
             st.error(f"There is no path between {node14_select} and {node25_select}")
+
 
 def input_product_on_process1(graph: nx.DiGraph):
     graph_dict = st.session_state["graph_dict"]
