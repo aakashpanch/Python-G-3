@@ -1,7 +1,6 @@
 import streamlit as st
 import networkx as nx
 import graphviz
-import community
 from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
 from networkx.algorithms import approximation as approx
 
