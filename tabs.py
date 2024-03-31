@@ -503,9 +503,11 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 1"]
+            product_name = ["Product 2"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name, color=set_color(node["type"]))
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name, color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -523,9 +525,11 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 1"]
+            product_name = ["Product 2"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name,
                            xlabel=str(node["submodels"]["Engineering"]),
                            color=set_color(node["type"]))
             for edge in edge_list:
@@ -545,9 +549,11 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 1"]
+            product_name = ["Product 2"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name,
                            xlabel=str(node["submodels"]["Electrical"]),
                            color=set_color(node["type"]))
             for edge in edge_list:
@@ -567,9 +573,11 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 1"]
+            product_name = ["Product 2"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name,
                            xlabel=str(node["submodels"]["Sustainable"]),
                            color=set_color(node["type"]))
             for edge in edge_list:
@@ -599,9 +607,11 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 2"]
+            product_name = ["Product 1"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name, color=set_color(node["type"]))
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name, color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -619,11 +629,13 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 2"]
+            product_name = ["Product 1"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Engineering"]),
-                           color=set_color(node["type"]))
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name,
+                               xlabel=str(node["submodels"]["Engineering"]),
+                               color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -641,11 +653,13 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 2"]
+            product_name = ["Product 1"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Electrical"]),
-                           color=set_color(node["type"]))
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name,
+                               xlabel=str(node["submodels"]["Electrical"]),
+                               color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
@@ -663,11 +677,13 @@ def visualization_graph():
             st.session_state["visual_dict"] = visual_dict
             node_list = visual_dict["nodes"]
             edge_list = visual_dict["product 2"]
+            product_name = ["Product 1"]
             for node in node_list:
-                node_name = node["name"]
-                graph.node(node_name, node_name,
-                           xlabel=str(node["submodels"]["Sustainable"]),
-                           color=set_color(node["type"]))
+                if node["type"] not in product_name:
+                    node_name = node["name"]
+                    graph.node(node_name, node_name,
+                               xlabel=str(node["submodels"]["Sustainable"]),
+                               color=set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
                 target = edge["target"]
