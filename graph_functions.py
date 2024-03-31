@@ -277,9 +277,11 @@ def product1_visual():
     edge_list = visual_dict["product 1"]
 
     # Add nodes to the Graphviz object with appropriate colors
+    product_name = ["Product 2"]
     for node in node_list:
-        node_name = node["name"]
-        graph.node(node_name, node_name, color=set_color(node["type"]))
+        if node["type"] not in product_name:
+            node_name = node["name"]
+            graph.node(node_name, node_name, color=set_color(node["type"]))
 
     # Add edges to the Graphviz object
     for edge in edge_list:
@@ -317,10 +319,11 @@ def product2_visual():
     edge_list = visual_dict["product 2"]
 
     # Add nodes to the Graphviz object with appropriate colors
+    product_name = ["Product 1"]
     for node in node_list:
-        node_name = node["name"]
-        graph.node(node_name, node_name, color=set_color(node["type"]))
-
+        if node["type"] not in product_name:
+            node_name = node["name"]
+            graph.node(node_name, node_name, color=set_color(node["type"]))
     # Add edges to the Graphviz object
     for edge in edge_list:
         source = edge["source"]
