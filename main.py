@@ -5,8 +5,8 @@ from streamlit_option_menu import option_menu
 
 from tabs import (upload_graph, create_node, update_node, delete_node,
                   create_relation, delete_relation,
-                  store_graph, visualization_graph, analyze_graph,
-                  export_graph, graph_dict_to_ppr_dict)
+                  store_graph, visualization_graph, basic_analyze_graph,
+                  export_graph, graph_dict_to_ppr_dict, adv_analyze_graph)
 
 if __name__ == '__main__':
     if "node_list" not in st.session_state:
@@ -17,10 +17,14 @@ if __name__ == '__main__':
 
     if "p2_list" not in st.session_state:
         st.session_state["p2_list"] = []
+
     if "graph_dict" not in st.session_state:
         st.session_state["graph_dict"] = []
+
     st.session_state["selected_value"] = ""
+
     st.session_state["selected_value11"] = ""
+
     st.session_state["selected_value22"] = ""
 
     tab_list = [
@@ -63,7 +67,7 @@ if __name__ == '__main__':
     if selected_tab == "Delete Nodes":
         delete_node()
 
-    if selected_tab ==  "Create Relation":
+    if selected_tab == "Create Relation":
         create_relation()
 
     if selected_tab == "Delete Relation":
@@ -72,16 +76,16 @@ if __name__ == '__main__':
     if selected_tab == "Store the graph":
         store_graph()
 
-    if selected_tab ==  "Visualize the graph":
+    if selected_tab == "Visualize the graph":
         visualization_graph()
 
-    if selected_tab ==  "Basic Analysis of the graph":
-        analyze_graph()
+    if selected_tab == "Basic Analysis of the graph":
+        basic_analyze_graph()
 
     if selected_tab == "Advanced Analysis of the graph":
-        analyze_graph()
-    if selected_tab ==  "Export the graph":
+        adv_analyze_graph()
+
+    if selected_tab == "Export the graph":
         export_graph()
-        #st.write(graph_dict_to_ppr_dict())
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

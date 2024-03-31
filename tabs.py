@@ -5,11 +5,14 @@ import uuid
 import graphviz
 from streamlit_agraph import agraph, Node, Edge, Config
 import networkx as nx
+import community
 from graph_functions import (output_nodes_and_edges, count_nodes, count_edges, density_graph,
                              check_path, is_empty, is_directed, shortest_path, specific_node,
-                             specific_edge, product1_visual, product2_visual, resource_utilization)
+                             specific_edge, product1_visual, product2_visual, resource_utilization1,
+                             resource_utilization2, recurring, process_on_process1, input_product_on_process1,
+                             process_on_process2,input_product_on_process2)
 from networkx.algorithms.approximation import (all_pairs_node_connectivity, local_node_connectivity)
-#import streamlit_nested_layout
+import streamlit_nested_layout
 
 def upload_graph():
     uploaded_graph = st.file_uploader("upload an existing graph", type="json")
@@ -149,32 +152,45 @@ def update_node():
 
         # Allow users to update node properties
         custom_node_name = st.text_input("Enter new name for the node", value=selected_node["name"])
-        new_type = st.selectbox("Select new type for the node", options=["Product 1", "Product 2", "Process", "Resource"])
+        new_type = st.selectbox("Select new type for the node", options=["Product 1",
+                                                                         "Product 2",
+                                                                         "Process",
+                                                                         "Resource"]
+                                )
 
         st.write("Attributes to Update")
         tab1, tab2, tab3 = st.tabs(["Engineering Data", "Electrical Data", "Sustainabilty Data"])
 
         # Engineering Data
         with tab1:
-            cost = st.text_input("Cost", value=selected_node["engineering"]["Cost"])
-            target_values = st.text_input("Target Value", value=selected_node["engineering"]["Target Values"])
-            mttf_data = st.text_input("MTTF", value=selected_node["engineering"]["MTTF"])
-            oee_data = st.text_input("OEE DATA (percentage)", value=selected_node["engineering"]["OEE"])
-            mttr_data = st.text_input("MTTR DATA (minutes)", value=selected_node["engineering"]["MTTR"])
+            cost = st.text_input("Cost",
+                                 value=selected_node["submodels"]["Engineering"]["Cost"])
+            target_values = st.text_input("Target Value",
+                                          value=selected_node["submodels"]["Engineering"]["Target Values"])
+            mttf_data = st.text_input("MTTF",
+                                      value=selected_node["submodels"]["Engineering"]["MTTF"])
+            oee_data = st.text_input("OEE DATA (percentage)",
+                                     value=selected_node["submodels"]["Engineering"]["OEE"])
+            mttr_data = st.text_input("MTTR DATA (minutes)",
+                                      value=selected_node["submodels"]["Engineering"]["MTTR"])
 
         # Electrical Data
         with tab2:
-            current = st.text_input("Current (amp)", value=selected_node["electrical"]["current"])
-            voltage = st.text_input("Voltage (volts)", value=selected_node["electrical"]["voltage"])
-            power = st.text_input("Power (watt)", value=selected_node["electrical"]["power"])
-            resistance = st.text_input("Resistance (ohms)", value=selected_node["electrical"]["resistance"])
+            current = st.text_input("Current (amp)",
+                                    value=selected_node["submodels"]["Electrical"]["current"])
+            voltage = st.text_input("Voltage (volts)",
+                                    value=selected_node["submodels"]["Electrical"]["voltage"])
+            power = st.text_input("Power (watt)",
+                                  value=selected_node["submodels"]["Electrical"]["power"])
+            resistance = st.text_input("Resistance (ohms)",
+                                       value=selected_node["submodels"]["Electrical"]["resistance"])
 
         # Sustainability Data
         with tab3:
-            CO2_footprint = st.text_input("CO2 footprint (kilotons)", value=selected_node["sustainable"]["CO2 footprint"])
-            energy_consumption = st.text_input("Energy consumption (kWh)", value=selected_node["sustainable"]["energy consumption"])
-            reusability = st.text_input("Reusability (percentage)", value=selected_node["sustainable"]["reusability"])
-            repairability = st.text_input("Repairability (percentage)", value=selected_node["sustainable"]["repairability"])
+            CO2_footprint = st.text_input("CO2 footprint (kilotons)", value=selected_node["submodels"]["Sustainable"]["CO2 footprint"])
+            energy_consumption = st.text_input("Energy consumption (kWh)", value=selected_node["submodels"]["Sustainable"]["energy consumption"])
+            reusability = st.text_input("Reusability (percentage)", value=selected_node["submodels"]["Sustainable"]["reusability"])
+            repairability = st.text_input("Repairability (percentage)", value=selected_node["submodels"]["Sustainable"]["repairability"])
 
         # Generate a dynamic key based on the selected node
         update_node_button_key = f"update_node_button_{node_to_update}"
@@ -184,19 +200,19 @@ def update_node():
             # Update node properties
             node_list[selected_index]["name"] = custom_node_name
             node_list[selected_index]["type"] = new_type
-            node_list[selected_index]["engineering"]["Cost"] = cost
-            node_list[selected_index]["engineering"]["Target Values"] = target_values
-            node_list[selected_index]["engineering"]["MTTF"] = mttf_data
-            node_list[selected_index]["engineering"]["OEE"] = oee_data
-            node_list[selected_index]["engineering"]["MTTR"] = mttr_data
-            node_list[selected_index]["electrical"]["current"] = current
-            node_list[selected_index]["electrical"]["voltage"] = voltage
-            node_list[selected_index]["electrical"]["power"] = power
-            node_list[selected_index]["electrical"]["resistance"] = resistance
-            node_list[selected_index]["sustainable"]["CO2 footprint"] = CO2_footprint
-            node_list[selected_index]["sustainable"]["energy consumption"] = energy_consumption
-            node_list[selected_index]["sustainable"]["reusability"] = reusability
-            node_list[selected_index]["sustainable"]["repairability"] = repairability
+            node_list[selected_index]["submodels"]["Engineering"]["Cost"] = cost
+            node_list[selected_index]["submodels"]["Engineering"]["Target Values"] = target_values
+            node_list[selected_index]["submodels"]["Engineering"]["MTTF"] = mttf_data
+            node_list[selected_index]["submodels"]["Engineering"]["OEE"] = oee_data
+            node_list[selected_index]["submodels"]["Engineering"]["MTTR"] = mttr_data
+            node_list[selected_index]["submodels"]["Electrical"]["current"] = current
+            node_list[selected_index]["submodels"]["Electrical"]["voltage"] = voltage
+            node_list[selected_index]["submodels"]["Electrical"]["power"] = power
+            node_list[selected_index]["submodels"]["Electrical"]["resistance"] = resistance
+            node_list[selected_index]["submodels"]["Sustainable"]["CO2 footprint"] = CO2_footprint
+            node_list[selected_index]["submodels"]["Sustainable"]["energy consumption"] = energy_consumption
+            node_list[selected_index]["submodels"]["Sustainable"]["reusability"] = reusability
+            node_list[selected_index]["submodels"]["Sustainable"]["repairability"] = repairability
 
             # Update edges connected to the selected node
             updated_edges1 = []
@@ -515,7 +531,7 @@ def visualization_graph():
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
-                           xlabel=str(node["engineering"]),
+                           xlabel=str(node["submodels"]["Engineering"]),
                            color= set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
@@ -540,7 +556,7 @@ def visualization_graph():
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
-                           xlabel=str(node["electrical"]),
+                           xlabel=str(node["submodels"]["Electrical"]),
                            color= set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
@@ -565,7 +581,7 @@ def visualization_graph():
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
-                           xlabel=str(node["sustainable"]),
+                           xlabel=str(node["submodels"]["Sustainable"]),
                            color= set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
@@ -621,7 +637,7 @@ def visualization_graph():
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
-                           xlabel=str(node["engineering"]),
+                           xlabel=str(node["submodels"]["Engineering"]),
                            color= set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
@@ -646,7 +662,7 @@ def visualization_graph():
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
-                           xlabel=str(node["electrical"]),
+                           xlabel=str(node["submodels"]["Electrical"]),
                            color= set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
@@ -671,7 +687,7 @@ def visualization_graph():
             for node in node_list:
                 node_name = node["name"]
                 graph.node(node_name, node_name,
-                           xlabel=str(node["sustainable"]),
+                           xlabel=str(node["submodels"]["Sustainable"]),
                            color= set_color(node["type"]))
             for edge in edge_list:
                 source = edge["source"]
@@ -680,7 +696,62 @@ def visualization_graph():
                 graph.edge(source, target, relation)
             st.graphviz_chart(graph)
 
-def analyze_graph():
+        with st.expander("AGraphVisualisation"):
+            nodes = []
+            edges = []
+            graph_dict = {
+                "nodes": st.session_state["node_list"],
+                "product1": st.session_state["p1_list"],
+                "product2": st.session_state["p2_list"],
+            }
+            st.session_state["graph_dict"] = graph_dict
+
+            node_list = graph_dict["nodes"]
+            edge_list = graph_dict["product1"]
+
+            for node in node_list:
+                # id=node["id"]
+                node_name = node["name"]
+
+                # nodes=[]
+
+                nodes.append(Node(id=node_name,
+                                  title="Testing",
+                                  label=node_name,
+                                  size=25)
+                             # shape="circularImage",
+                             # image="http://marvel-force-chart.surge.sh/marvel_force_chart_img/top_spiderman.png")
+                             )  # includes**kwargs
+            for edge in edge_list:
+                source = edge["source"]
+                target = edge["target"]
+                relation = edge["type"]
+                # edges=[]
+                edges.append(Edge(source=source,
+                                  label=relation,
+                                  target=target,
+                                  # **kwargs
+                                  )
+                             )
+
+            config = Config(width=750,
+                            height=950,
+                            directed=True,
+                            physics=True,
+                            hierarchical=False,
+                            # **kwargs
+                            )
+
+            return_value = agraph(nodes=nodes,
+                                  edges=edges,
+                                  config=config)
+
+            # graph.node("test")
+            # graph.edge("run","intr")
+
+
+def basic_analyze_graph():
+
     G = nx.DiGraph()
 
     graph_dict = {
@@ -689,7 +760,7 @@ def analyze_graph():
         "product 2": st.session_state["p2_list"],
     }
     st.session_state["graph_dict"] = graph_dict
-    #graph_dict = st.session_state["graph_dict"]
+
     node_list = graph_dict["nodes"]
     p1_list = graph_dict["product 1"]
     p2_list = graph_dict["product 2"]
@@ -708,12 +779,9 @@ def analyze_graph():
 
         G.add_nodes_from(node_tuple_list)
         G.add_edges_from(edge_tuple_list)
-        # st.write(G.nodes)
-        # st.write(G.edges)
 
         select_functions1 = st.selectbox(label="Select Function",
                                         options=["Output Nodes and Edges",
-                                                 "Resource Utilization",
                                                  "Count Nodes",
                                                  "Count Edges",
                                                  "Specific Node",
@@ -729,8 +797,6 @@ def analyze_graph():
             output_nodes_and_edges(graph=G)
         elif select_functions1 == "Count Nodes":
             count_nodes(G)
-        elif select_functions1 == "Resource Utilization":
-            resource_utilization(G)
         elif select_functions1 == "Count Edges":
             count_edges(G)
         elif select_functions1 == "Specific Node":
@@ -892,3 +958,78 @@ def graph_dict_to_ppr_dict():
     return ppr_dict
 
 
+def adv_analyze_graph():
+    G = nx.DiGraph()
+
+    graph_dict = {
+        "nodes": st.session_state["node_list"],
+        "product 1": st.session_state["p1_list"],
+        "product 2": st.session_state["p2_list"],
+    }
+    st.session_state["graph_dict"] = graph_dict
+
+    node_list = graph_dict["nodes"]
+    p1_list = graph_dict["product 1"]
+    p2_list = graph_dict["product 2"]
+    node_tuple_list = []
+    edge_tuple_list = []
+
+    with st.expander("Product 1 Graph Analysis"):
+
+        for node in node_list:
+            node_tuple = (node["name"], node)
+            node_tuple_list.append(node_tuple)
+
+        for edge in p1_list:
+            edge_tuple = (edge["source"], edge["target"], edge)
+            edge_tuple_list.append(edge_tuple)
+
+        G.add_nodes_from(node_tuple_list)
+        G.add_edges_from(edge_tuple_list)
+
+        select_functions1 = st.selectbox(label="Select Function",
+                                         options=["Impact of Input Product on Process Step",
+                                                  "Impact of Process Step on another Process",
+                                                  "Impact of Resource on Product",
+                                                  "Recurring Components"
+                                                  ],
+                                         key="select_functions1")
+        if select_functions1 == "Impact of Resource on Product":
+            resource_utilization1(graph=G)
+        elif select_functions1 == "Recurring Components":
+            recurring(G)
+        elif select_functions1 == "Impact of Process Step on another Process":
+            process_on_process1(G)
+        elif select_functions1 == "Impact of Input Product on Process Step":
+            input_product_on_process1(G)
+
+    with st.expander("Product 2 Graph Analysis"):
+        for node in node_list:
+            # id = node["id"]
+            # node_name = node["name"]
+            node_tuple = (node["name"], node)
+            node_tuple_list.append(node_tuple)
+
+        for edge in p2_list:
+            edge_tuple = (edge["source"], edge["target"], edge)
+            edge_tuple_list.append(edge_tuple)
+
+        G.add_nodes_from(node_tuple_list)
+        G.add_edges_from(edge_tuple_list)
+
+        select_functions2 = st.selectbox(label="Select Function",
+                                         options=["Impact of Input Product on Process Step",
+                                                  "Impact of Process Step on another Process",
+                                                  "Impact of Resource on Product",
+                                                  "Recurring Components"
+                                                  ],
+                                         key="select_functions2")
+        if select_functions2 == "Impact of Resource on Product":
+            resource_utilization2(graph=G)
+        elif select_functions2 == "Recurring Components":
+            recurring(G)
+        elif select_functions2 == "Impact of Process Step on another Process":
+            process_on_process2(G)
+        elif select_functions2 == "Impact of Input Product on Process Step":
+            input_product_on_process2(G)
+            #check_path(G)
